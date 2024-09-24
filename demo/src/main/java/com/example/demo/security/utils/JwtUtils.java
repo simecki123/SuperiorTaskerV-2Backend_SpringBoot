@@ -40,7 +40,7 @@ public class JwtUtils {
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key())
-                .claim("userId", userPrincipal.getId())
+                .claim("id", userPrincipal.getId())
                 .compact();
     }
 
