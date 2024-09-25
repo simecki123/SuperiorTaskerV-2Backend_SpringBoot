@@ -1,8 +1,8 @@
 spring:
-  config:
-    import: optional:file:.env[.properties]
   application:
     name: ${SPRING_APPLICATION_NAME}
+  config:
+    import: optional:file:.env[.properties]
   data:
     mongodb:
       uri: ${SPRING_MONGODB_URI}
@@ -11,3 +11,7 @@ spring:
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION_MS}
+  cookie-name: ${JWT_COOKIE_NAME}
+
+
+
