@@ -26,9 +26,6 @@ import org.springframework.beans.factory.annotation.Value;
 @Slf4j
 @RequestMapping("api/auth")
 public class AuthenticationController {
-    @Value("${frontend.url.dev}")
-    private String FRONTEND_URL;
-
     private final AuthService authService;
 
     private final JwtUtils jwtUtils;
