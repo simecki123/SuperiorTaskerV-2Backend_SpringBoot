@@ -1,15 +1,29 @@
 package com.example.demo.Service.impl;
 
 import com.example.demo.Service.UserService;
+import com.example.demo.converters.ConverterService;
 import com.example.demo.models.dto.UserDto;
 import com.example.demo.models.dto.UserProfileEditResponse;
 import com.example.demo.models.dto.UserProfileRequest;
 import com.example.demo.models.dto.UserProfileResponse;
+import com.example.demo.repository.UserRepository;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
+@Service
+@Transactional
+@Slf4j
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
+
+    private final UserRepository userRepository;
+    private final ConverterService converterService;
+
     @Override
     public UserDto getUserById(String id) {
         return null;
