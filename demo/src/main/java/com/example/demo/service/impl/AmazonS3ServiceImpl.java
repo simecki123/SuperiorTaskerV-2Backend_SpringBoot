@@ -1,7 +1,7 @@
-package com.example.demo.Service.impl;
+package com.example.demo.service.impl;
 
 import com.amazonaws.services.s3.model.PutObjectResult;
-import com.example.demo.Service.AmazonS3Service;
+import com.example.demo.service.AmazonS3Service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

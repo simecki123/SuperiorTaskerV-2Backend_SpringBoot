@@ -1,4 +1,4 @@
-package com.example.demo.Service;
+package com.example.demo.service;
 import com.example.demo.models.dao.Message;
 import org.springframework.data.domain.Pageable;
 import java.util.List;

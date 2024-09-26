@@ -1,6 +1,6 @@
 package com.example.demo.api;
 
-import com.example.demo.Service.UserService;
+import com.example.demo.service.UserService;
 import com.example.demo.config.openapi.ShowAPI;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

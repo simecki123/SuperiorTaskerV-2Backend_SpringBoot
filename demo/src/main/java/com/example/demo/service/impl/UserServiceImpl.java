@@ -1,6 +1,6 @@
-package com.example.demo.Service.impl;
+package com.example.demo.service.impl;
 
-import com.example.demo.Service.UserService;
+import com.example.demo.service.UserService;
 import com.example.demo.converters.ConverterService;
 import com.example.demo.models.dto.UserDto;
 import com.example.demo.models.dto.UserProfileEditResponse;

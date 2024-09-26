@@ -1,6 +1,6 @@
 package com.example.demo.converters.impl;
 
-import com.example.demo.Service.AmazonS3Service;
+import com.example.demo.service.AmazonS3Service;
 import com.example.demo.converters.ConverterService;
 import com.example.demo.models.dao.*;
 import com.example.demo.models.dto.*;

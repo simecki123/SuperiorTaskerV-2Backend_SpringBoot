@@ -1,6 +1,6 @@
-package com.example.demo.Service.impl;
+package com.example.demo.service.impl;
 
-import com.example.demo.Service.MessageService;
+import com.example.demo.service.MessageService;
 import com.example.demo.models.dao.Message;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
