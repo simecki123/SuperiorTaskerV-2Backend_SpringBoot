@@ -10,6 +10,6 @@ import java.util.Optional;
 @Repository
 public interface ProjectRepository extends MongoRepository<Project, String> {
     Optional<Project> getById(String id);
-    boolean existsByUserIdGroupIdAndCompletion(String userId, String groupId, double completion);
-    Optional<Event> findByUserIdGroupIdAndCompletion(String userId, String groupId, double completion);
+    boolean existsByUserIdAndGroupIdAndCompletion(String userId, String groupId, double completion);
+    Optional<Event> findByUserIdAndGroupIdAndCompletion(String userId, String groupId, double completion);
 }

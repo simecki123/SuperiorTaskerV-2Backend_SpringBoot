@@ -8,7 +8,7 @@ import java.util.List;
 
 @Repository
 public interface UserGroupRelationRepository extends MongoRepository<UserGroupRelation, String> {
-    List<UserGroupRelation> findAllByUserProfileId(String userId);
+    List<UserGroupRelation> findAllByUserId(String userId);
     List<UserGroupRelation> findAllByGroupId(String groupId);
-    UserGroupRelation findByUserProfileIdAndGroupId(String userId, String groupId);
+    UserGroupRelation findByUserIdAndGroupId(String userId, String groupId);
 }

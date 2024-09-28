@@ -12,5 +12,6 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserGroupRelationDto {
     private String groupId;
+    private String userId;
     private Role userRole;
 }

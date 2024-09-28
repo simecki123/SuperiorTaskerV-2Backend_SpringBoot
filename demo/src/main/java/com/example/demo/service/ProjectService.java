@@ -15,6 +15,6 @@ public interface ProjectService {
     void updateProjectsJob();
     String updateProjectCompletion(String id, double completion);
     ProjectDto getActiveProjects(String groupId);
-    ProjectDto getAllProjects(String grouPId);
+    ProjectDto getAllProjects(String groupId);
 
 }

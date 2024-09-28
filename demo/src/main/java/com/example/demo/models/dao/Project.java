@@ -28,6 +28,10 @@ public class Project {
 
     @NotBlank
     @Size(max = 50)
+    private String userId;
+
+    @NotBlank
+    @Size(max = 50)
     private String name;
 
 

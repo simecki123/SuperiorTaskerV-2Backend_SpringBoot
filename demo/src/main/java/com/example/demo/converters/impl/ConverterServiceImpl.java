@@ -48,4 +48,9 @@ public class ConverterServiceImpl implements ConverterService {
     public TaskDto convertToUseTaskDto(Task task) {
         return null;
     }
+
+    @Override
+    public String convertPhotoUriToUrl(String photoUri) {
+        return null;
+    }
 }
