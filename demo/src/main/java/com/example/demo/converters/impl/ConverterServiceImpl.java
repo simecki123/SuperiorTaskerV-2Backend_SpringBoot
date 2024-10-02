@@ -20,6 +20,16 @@ public class ConverterServiceImpl implements ConverterService {
     }
 
     @Override
+    public GroupDto convertToGroupDto(Group group) {
+        return null;
+    }
+
+    @Override
+    public GroupMemberResponse convertToGroupMemberResponse(GroupMemberDto groupMemberDto) {
+        return null;
+    }
+
+    @Override
     public UserProfileEditResponse convertToUserProfileResponse(UserProfileRequest userProfileRequest) {
         return null;
     }
@@ -40,12 +50,12 @@ public class ConverterServiceImpl implements ConverterService {
     }
 
     @Override
-    public ProjectDto convertToUseProjectDto(Project project) {
+    public ProjectResponse convertToUserProjectDto(Project project) {
         return null;
     }
 
     @Override
-    public TaskDto convertToUseTaskDto(Task task) {
+    public TaskResponse convertToUserTaskDto(Task task) {
         return null;
     }
 

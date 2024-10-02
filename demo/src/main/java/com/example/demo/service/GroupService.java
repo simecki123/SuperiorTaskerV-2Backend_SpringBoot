@@ -4,7 +4,7 @@ import com.example.demo.models.dto.*;
 import com.example.demo.models.enums.Role;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.awt.print.Pageable;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface GroupService {
@@ -18,5 +18,5 @@ public interface GroupService {
     UserGroupRelationDto getGroupRoles(String groupId);
     List<GroupMemberResponse> getGroupMembers(String groupId, Pageable pageable);
     void kickUserFromGroup(String groupId, String userProfileId);
-    void promoteUser(String groupId, String userProfileId, Role role);
+    void promoteUser(String groupId, String userId, Role role);
 }

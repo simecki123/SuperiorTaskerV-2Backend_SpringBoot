@@ -32,13 +32,7 @@ public class Helper {
         return null;
     }
 
-    public static String getLoggedInUserProfileId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
-            return (((UserDetailsImpl) authentication.getPrincipal()).getUserProfileId());
-        }
-        return null;
-    }
+
 
     public static String generateRandomString() {
         return RandomStringUtils.randomAlphanumeric(20);

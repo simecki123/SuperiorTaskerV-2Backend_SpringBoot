@@ -33,6 +33,13 @@ public class Message {
     @Size(max = 200)
     private String message;
 
+    //User who made message
+    private String userProfileId;
+    private String firstName;
+    private String lastName;
+    private String eventId;
+    private String photoUri;
+
     @CreatedDate
     private LocalDateTime createdAt;
 

@@ -10,12 +10,12 @@ import java.util.List;
 public interface TaskService {
     TaskResponse createTask(String groupId, TaskRequest taskRequest);
     TaskResponse getTaskById(String taskId);
-    List<TaskResponse> getAllTasksForGroup(String groupId);
+    List<TaskResponse> getAllTasksForGroup(String groupId, Pageable pageable);
     List<TaskResponse> getAllTasksForUser(String groupId, String userId, Pageable pageable, TaskStatus taskStatus, String search);
 
     String updateTaskStatus(String id, TaskStatus taskStatus);
-    List<TaskResponse> getActiveTasksByGroupId(String groupId);
-    List<TaskResponse> getActiveTasksByGroupIdAndUserId(String groupId, String userId);
+    List<TaskResponse> getActiveTasksByGroupId(String groupId, Pageable pageable);
+    List<TaskResponse> getActiveTasksByGroupIdAndUserId(String groupId, String userId, Pageable pageable);
 
 
 }

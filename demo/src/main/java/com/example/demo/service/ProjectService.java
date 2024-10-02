@@ -13,8 +13,8 @@ public interface ProjectService {
     ProjectResponse getProjectById(String id);
     List<ProjectResponse> filterProjects(String groupId, Pageable pageable, String search, ProjectFilterRequest request);
     void updateProjectsJob();
-    String updateProjectCompletion(String id, double completion);
+    String updateProjectCompletion(String id);
     ProjectDto getActiveProjects(String groupId);
-    ProjectDto getAllProjects(String groupId);
+    List<ProjectResponse> getAllProjects(String groupId);
 
 }
