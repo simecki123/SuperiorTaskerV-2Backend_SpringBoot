@@ -31,7 +31,7 @@ public class ConverterServiceImpl implements ConverterService {
         userDto.setDescription(user.getDescription());
         userDto.setProfileUri(convertPhotoUriToUrl(user.getPhotoUri()));
         List<UserGroupRelation> userGroupRelationList = userGroupRelationRepository.findAllByUserId(user.getId());
-        userDto.setGroupMembershipData(convertToUserGroupRelation(userGroupRelationList));
+        userDto.setGroupMembershipData(userGroupRelationList);
 
         return userDto;
     }

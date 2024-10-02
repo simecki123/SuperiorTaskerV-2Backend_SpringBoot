@@ -1,6 +1,7 @@
 package com.example.demo.service.impl;
 
 import com.amazonaws.services.kms.model.NotFoundException;
+import com.example.demo.exceptions.UnauthorizedException;
 import com.example.demo.models.dao.User;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.UserGroupRelationRepository;
@@ -15,6 +16,7 @@ import com.example.demo.models.dto.UserProfileResponse;
 import com.example.demo.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -63,7 +65,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String getUserIdByEmail(String email) {
-        User user = userRepository.findByEmail(email);
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         if(user == null) {
             throw new NotFoundException("User not found with email: " + email);
         }

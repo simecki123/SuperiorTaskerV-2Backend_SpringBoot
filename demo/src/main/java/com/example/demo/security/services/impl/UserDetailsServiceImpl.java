@@ -1,5 +1,6 @@
 package com.example.demo.security.services.impl;
 
+import com.example.demo.exceptions.UnauthorizedException;
 import com.example.demo.models.dao.User;
 import com.example.demo.repository.UserRepository;
 import lombok.AllArgsConstructor;
@@ -20,7 +21,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email);
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         if(user == null) {
             throw new UsernameNotFoundException("User not found with email" + email);
         }

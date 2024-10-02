@@ -20,21 +20,12 @@ public class UserDetailsImpl implements UserDetails {
     private String id;
     private String email;
     private String password;
-    private String userProfileId;
     private String firstName;
     private String lastName;
     private String description;
     private String photoUri;
 
-    public UserDetailsImpl(String id, String email, String password, String description, String firstName, String lastName, String photoUri) {
-        this.id = id;
-        this.email = email;
-        this.password = password;
-        this.description = description;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.photoUri = photoUri;
-    }
+
 
     public static UserDetailsImpl build(User user) {
         return new UserDetailsImpl(

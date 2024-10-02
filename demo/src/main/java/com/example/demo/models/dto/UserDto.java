@@ -1,5 +1,6 @@
 package com.example.demo.models.dto;
 
+import com.example.demo.models.dao.UserGroupRelation;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,5 +18,5 @@ public class UserDto {
     private String lastName;
     private String description;
     private String profileUri;
-    private List<UserGroupRelationDto> groupMembershipData;
+    private List<UserGroupRelation> groupMembershipData;
 }
