@@ -130,7 +130,8 @@ public class UserServiceImpl implements UserService {
 
         log.info("UserProfile successfully updated");
         UserProfileEditResponse response = new UserProfileEditResponse();
-        response.setPhotoUrl(converterService.convertPhotoUriToUrl(userProfile.getPhotoUri()));
+        String url = converterService.convertPhotoUriToUrl(userProfile.getPhotoUri());
+        response.setPhotoUri(url);
         return response;
     }
 

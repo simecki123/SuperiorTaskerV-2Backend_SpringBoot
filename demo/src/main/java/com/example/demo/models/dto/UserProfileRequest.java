@@ -33,6 +33,9 @@ public class UserProfileRequest {
     @Size(max = 120)
     private String description;
 
+    @NotBlank
+    private String photoUrl;
+
 
 
 }
