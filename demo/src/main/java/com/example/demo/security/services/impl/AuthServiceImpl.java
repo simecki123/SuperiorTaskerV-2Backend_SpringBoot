@@ -55,10 +55,14 @@ public class AuthServiceImpl implements AuthService {
 
             List<UserGroupRelation> userGroupRelationList = userGroupRelationRepository.findAllByUserId(userDetails.getId());
 
-            userDto.setFirstName(userDetails.getFirstName());
-            userDto.setLastName(userDetails.getLastName());
+            User user = userRepository.getUserById(userDetails.getId());
+            System.out.println(user);
+
+            userDto.setFirstName(user.getFirstName());
+            userDto.setLastName(user.getLastName());
             userDto.setGroupMembershipData(userGroupRelationList);
-            userDto.setProfileUri(userDto.getProfileUri());
+            userDto.setDescription(user.getDescription());
+            userDto.setProfileUri(user.getPhotoUri());
             userDto.setEmail(((UserDetailsImpl) authentication.getPrincipal()).getEmail());
 
 
