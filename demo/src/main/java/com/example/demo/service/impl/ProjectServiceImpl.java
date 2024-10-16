@@ -141,7 +141,7 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
-        double completion = completionSum / taskList.size();
+        double completion = round((completionSum / taskList.size()) * 100, 2);
 
 
         project.setCompletion(completion);
@@ -150,6 +150,16 @@ public class ProjectServiceImpl implements ProjectService {
 
 
         return String.valueOf(completion);
+    }
+
+    // helper method to round completion decimal to 2 decimal points...
+    private double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        long factor = (long) Math.pow(10, places);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
     }
 
     @Override

@@ -84,29 +84,42 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public List<TaskResponse> getAllTasksForGroup(String groupId, Pageable pageable) {
-        Group group = groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("There is no group, so no tasks as well"));
-        int pageNumber = pageable.getPageNumber();
-        int pageSize = pageable.getPageSize();
+    public List<TaskResponse> getAllTasksForUser(String userId, String groupId, String projectId, TaskStatus taskStatus, String search, Pageable pageable) {
+        log.info("Searching for tasks with userId: {}", userId);
 
-        Criteria criteria = Criteria.where("groupId").is(groupId);
-        criteria.and("userId").ne(Helper.getLoggedInUserId());
+        Criteria criteria = new Criteria();
+        criteria.and("userId").is(userId);
+
+        // Optionally include groupId, projectId, taskStatus, and search
+        if (groupId != null && !groupId.isEmpty()) {
+            criteria.and("groupId").is(groupId);
+        }
+        if (projectId != null && !projectId.isEmpty()) {
+            criteria.and("projectId").is(projectId);
+        }
+        if (taskStatus != null) {
+            criteria.and("status").is(taskStatus);
+        }
+        if (search != null && !search.isEmpty()) {
+            criteria.and("name").regex(search, "i");  // Case-insensitive search
+        }
 
         MatchOperation matchOperation = Aggregation.match(criteria);
 
         ProjectionOperation taskOperation = Aggregation.project()
                 .and("id").as("taskId")
                 .and("userId").as("userId")
-                .and ("groupId").as("groupId")
+                .and("groupId").as("groupId")
                 .and("projectId").as("projectId")
                 .and("name").as("name")
                 .and("description").as("description")
+                .and("status").as("status")
                 .and("startDate").as("startDate")
                 .and("endDate").as("endDate");
 
         SortOperation sortOperation = Aggregation.sort(Sort.by(Sort.Direction.DESC, "createdAt"));
-        SkipOperation skipOperation = Aggregation.skip((long) pageNumber * pageSize);
-        LimitOperation limitOperation = Aggregation.limit(pageSize);
+        SkipOperation skipOperation = Aggregation.skip((long) pageable.getPageNumber() * pageable.getPageSize());
+        LimitOperation limitOperation = Aggregation.limit(pageable.getPageSize());
 
         Aggregation aggregation = Aggregation.newAggregation(
                 matchOperation,
@@ -117,102 +130,15 @@ public class TaskServiceImpl implements TaskService {
         );
 
         AggregationResults<Task> results = mongoTemplate.aggregate(aggregation, "tasks", Task.class);
-        return results
-                .getMappedResults()
+        log.info("Found {} results", results.getMappedResults().size());
+
+        return results.getMappedResults()
                 .stream()
                 .map(converterService::convertToUserTaskDto)
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public List<TaskResponse> getAllTasksForUser(String groupId, String userId, Pageable pageable, TaskStatus taskStatus, String search) {
-        Group group = groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("There is no group, so no tasks as well"));
-        int pageNumber = pageable.getPageNumber();
-        int pageSize = pageable.getPageSize();
 
-        Criteria criteria = Criteria.where("groupId").is(groupId);
-        criteria.and("userId").ne(Helper.getLoggedInUserId());
-        criteria.and("taskStatus").is(taskStatus);
-
-        MatchOperation matchOperation = Aggregation.match(criteria);
-
-        ProjectionOperation taskOperation = Aggregation.project()
-                .and("id").as("taskId")
-                .and("userId").as("userId")
-                .and ("groupId").as("groupId")
-                .and("projectId").as("projectId")
-                .and("name").as("name")
-                .and("description").as("description")
-                .and("startDate").as("startDate")
-                .and("endDate").as("endDate");
-
-        SortOperation sortOperation = Aggregation.sort(Sort.by(Sort.Direction.DESC, "createdAt"));
-        SkipOperation skipOperation = Aggregation.skip((long) pageNumber * pageSize);
-        LimitOperation limitOperation = Aggregation.limit(pageSize);
-
-        Aggregation aggregation = Aggregation.newAggregation(
-                matchOperation,
-                taskOperation,
-                sortOperation,
-                skipOperation,
-                limitOperation
-        );
-
-        AggregationResults<Task> results = mongoTemplate.aggregate(aggregation, "tasks", Task.class);
-        return results
-                .getMappedResults()
-                .stream()
-                .map(converterService::convertToUserTaskDto)
-                .collect(Collectors.toList());
-
-    }
-
-
-    /**
-     * Method to fetch all users tasks no matter the group....
-     * @param userId
-     * @param pageable
-     * @return
-     */
-    @Override
-    public List<TaskResponse> getAllUserTasks(String userId, Pageable pageable) {
-        int pageNumber = pageable.getPageNumber();
-        int pageSize = pageable.getPageSize();
-
-        Criteria criteria = Criteria.where("userId").ne(Helper.getLoggedInUserId());
-
-
-        MatchOperation matchOperation = Aggregation.match(criteria);
-
-        ProjectionOperation taskOperation = Aggregation.project()
-                .and("id").as("taskId")
-                .and("userId").as("userId")
-                .and ("groupId").as("groupId")
-                .and("projectId").as("projectId")
-                .and("name").as("name")
-                .and("description").as("description")
-                .and("startDate").as("startDate")
-                .and("endDate").as("endDate");
-
-        SortOperation sortOperation = Aggregation.sort(Sort.by(Sort.Direction.DESC, "createdAt"));
-        SkipOperation skipOperation = Aggregation.skip((long) pageNumber * pageSize);
-        LimitOperation limitOperation = Aggregation.limit(pageSize);
-
-        Aggregation aggregation = Aggregation.newAggregation(
-                matchOperation,
-                taskOperation,
-                sortOperation,
-                skipOperation,
-                limitOperation
-        );
-
-        AggregationResults<Task> results = mongoTemplate.aggregate(aggregation, "tasks", Task.class);
-        return results
-                .getMappedResults()
-                .stream()
-                .map(converterService::convertToUserTaskDto)
-                .collect(Collectors.toList());
-    }
 
     @Override
     public String updateTaskStatus(String id, TaskStatus taskStatus) {
@@ -221,15 +147,7 @@ public class TaskServiceImpl implements TaskService {
         return "Success";
     }
 
-    @Override
-    public List<TaskResponse> getActiveTasksByGroupId(String groupId, Pageable pageable) {
-        // Maybe needed later ...
-        return null;
-    }
 
-    @Override
-    public List<TaskResponse> getActiveTasksByGroupIdAndUserId(String groupId, String userId, Pageable pageable) {
-        //Maybe needed later...
-        return null;
-    }
+
+
 }
