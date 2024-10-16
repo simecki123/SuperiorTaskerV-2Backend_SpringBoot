@@ -47,14 +47,14 @@ public class ProjectServiceImpl implements ProjectService {
     private final GroupRepository groupRepository;
 
     @Override
-    public ProjectResponse createProject(String groupId, ProjectRequest request) {
-        groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
+    public ProjectResponse createProject(ProjectRequest request) {
+        groupRepository.findById(request.getGroupId()).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
         User user = userRepository.getUserById(Helper.getLoggedInUserId());
 
 
         Project project = new Project();
         project.setUserId(request.getUserid());
-        project.setGroupId(groupId);
+        project.setGroupId(request.getGroupId());
         project.setName(request.getName());
         project.setDescription(request.getDescription());
         project.setStartDate(request.getStartDate());

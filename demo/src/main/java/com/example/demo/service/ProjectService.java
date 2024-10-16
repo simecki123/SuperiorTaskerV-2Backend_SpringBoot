@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface ProjectService {
-    ProjectResponse createProject(String groupId, ProjectRequest request);
+    ProjectResponse createProject(ProjectRequest request);
     ProjectResponse getProjectById(String id);
     List<ProjectResponse> filterProjects(String groupId, Pageable pageable, String search, ProjectFilterRequest request);
     void updateProjectsJob();

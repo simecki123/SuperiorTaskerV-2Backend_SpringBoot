@@ -25,15 +25,17 @@ public class Task {
 
     @NotBlank
     @Size(max = 50)
+    private String userId;
+
+
+    @NotBlank
+    @Size(max = 50)
     private String projectId;
 
     @NotBlank
     @Size(max = 50)
     private String groupId;
 
-    @NotBlank
-    @Size(max = 50)
-    private String userId;
 
     @NotBlank
     @Size(max = 50)

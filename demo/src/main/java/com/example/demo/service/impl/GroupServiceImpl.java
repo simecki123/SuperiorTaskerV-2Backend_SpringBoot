@@ -37,9 +37,6 @@ import java.util.Optional;
 @AllArgsConstructor
 public class GroupServiceImpl implements GroupService {
 
-    @Value("${frontend.url.dev}")
-    private final String FRONTEND_URL;
-
     private final GroupRepository groupRepository;
 
     private final ConverterService converterService;
@@ -84,13 +81,16 @@ public class GroupServiceImpl implements GroupService {
         response.setName(request.getName());
         response.setDescription(request.getDescription());
 
+        log.info("Group: ", response);
+        log.info("Relation: ", groupMembership);
+
         log.info("Group created");
         return response;
     }
 
     @Override
     public GroupDto getGroupById(String id) {
-        Group group = groupRepository.getById(id).orElseThrow(() -> new NotFoundException("No group associated with that id"));
+        Group group = groupRepository.findById(id).orElseThrow(() -> new NotFoundException("No group associated with that id"));
 
         log.info("Get group by id finished");
         return converterService.convertToGroupDto(group);

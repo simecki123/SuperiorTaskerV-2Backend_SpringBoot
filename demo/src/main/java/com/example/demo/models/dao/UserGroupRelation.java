@@ -13,7 +13,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-@Document(collection = "user-group-relations")
+@Document(collection = "user-group-relation")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

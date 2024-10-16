@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class TaskRequest {
     @NotBlank
     @Size(max = 50)
-    private String userid;
+    private String userId;
 
     @NotBlank
     @Size(max = 50)
