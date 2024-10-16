@@ -2,6 +2,7 @@ package com.example.demo.service.impl;
 
 import com.example.demo.converters.ConverterService;
 import com.example.demo.exceptions.NoGroupFoundException;
+import com.example.demo.exceptions.NoProjectFoundException;
 import com.example.demo.exceptions.NoTaskFoundException;
 import com.example.demo.models.dao.Group;
 import com.example.demo.models.dao.Project;
@@ -15,6 +16,7 @@ import com.example.demo.repository.ProjectRepository;
 import com.example.demo.repository.TaskRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.utils.Helper;
+import com.example.demo.service.ProjectService;
 import com.example.demo.service.TaskService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,12 +45,16 @@ public class TaskServiceImpl implements TaskService {
     private final UserRepository userRepository;
     private final GroupRepository groupRepository;
     private final ConverterService converterService;
+    private final ProjectService projectService;
     private final MongoTemplate mongoTemplate;
 
     @Override
     public TaskResponse createTask(TaskRequest taskRequest) {
         log.info("Starting to create task");
         groupRepository.findById(taskRequest.getGroupId()).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
+        projectRepository.findById(taskRequest.getProjectId()).orElseThrow(()-> new NoProjectFoundException("No project associated with projectId"));
+
+
         User user = userRepository.getUserById(Helper.getLoggedInUserId());
 
         Task task = new Task();
@@ -63,6 +69,8 @@ public class TaskServiceImpl implements TaskService {
         task.setStatus(TaskStatus.IN_PROGRESS);
 
         taskRepository.save(task);
+        log.info("Updating completion of the project...");
+        projectService.updateProjectCompletion(task.getProjectId());
 
         log.info("Task created");
         return converterService.convertToUserTaskDto(task);

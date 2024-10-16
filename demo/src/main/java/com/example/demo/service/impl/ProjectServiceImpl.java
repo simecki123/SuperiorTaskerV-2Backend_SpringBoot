@@ -128,11 +128,12 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public String updateProjectCompletion(String id) {
-        Project project = projectRepository.findById(id).orElseThrow(() -> new NoProjectFoundException("No project with associated id"));
-        String groupId = project.getGroupId();
-        List<Task> taskList = new ArrayList<>();
-        taskList = taskRepository.findAllByProjectId(id);
 
+        Project project = projectRepository.findById(id).orElseThrow(() -> new NoProjectFoundException("No project with associated id"));
+        log.info("Fetching project ");
+
+        List<Task> taskList = taskRepository.findAllByProjectId(id);
+        log.info("returning task list ");
         double completionSum = 0.00;
         for(Task task : taskList) {
             if(task.getStatus().equals(TaskStatus.COMPLETED)){
@@ -140,10 +141,12 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
-        double completion = completionSum/ taskList.size();
+        double completion = completionSum / taskList.size();
 
 
         project.setCompletion(completion);
+
+        projectRepository.save(project);
 
 
         return String.valueOf(completion);
