@@ -2,6 +2,7 @@ package com.example.demo.api;
 
 import com.example.demo.exceptions.NoGroupFoundException;
 import com.example.demo.exceptions.NoProjectFoundException;
+import com.example.demo.exceptions.NoTaskFoundException;
 import com.example.demo.models.dto.TaskRequest;
 import com.example.demo.models.dto.TaskResponse;
 import com.example.demo.models.enums.TaskStatus;
@@ -59,6 +60,31 @@ public class TaskController {
             return ResponseEntity.ok(tasks);
         } catch (Exception e) {
             log.error("Error fetching filtered tasks", e);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PatchMapping("/update-task")
+    public ResponseEntity<String> updateTaskStatus(@RequestParam String taskId, @RequestParam TaskStatus taskStatus) {
+        try {
+            log.info("Updating task status...");
+            return ResponseEntity.ok(taskService.updateTaskStatus(taskId, taskStatus));
+
+        } catch (NoTaskFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @DeleteMapping("/delete-task")
+    public ResponseEntity<String> deleteTask(@RequestParam String taskId) {
+        try {
+            log.info("Deleting task...");
+            return ResponseEntity.ok(taskService.deleteTaskById(taskId));
+        } catch (NoTaskFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }

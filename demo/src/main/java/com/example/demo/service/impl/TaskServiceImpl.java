@@ -144,10 +144,16 @@ public class TaskServiceImpl implements TaskService {
     public String updateTaskStatus(String id, TaskStatus taskStatus) {
         Task task = taskRepository.getById(id).orElseThrow(() -> new NoTaskFoundException("There is no task with that id, so it cannot be updated!"));
         task.setStatus(taskStatus);
-        return "Success";
+        taskRepository.save(task);
+        return "Task status is successfully updated...";
     }
 
-
+    @Override
+    public String deleteTaskById(String taskId) {
+        Task task = taskRepository.getById(taskId).orElseThrow(() -> new NoTaskFoundException("There is no task with that id, so it cannot be updated!"));
+        taskRepository.delete(task);
+        return "Task is successfully deleted...";
+    }
 
 
 }
