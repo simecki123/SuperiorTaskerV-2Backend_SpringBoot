@@ -4,18 +4,13 @@ import com.example.demo.converters.ConverterService;
 import com.example.demo.exceptions.NoGroupFoundException;
 import com.example.demo.exceptions.NoProjectFoundException;
 import com.example.demo.exceptions.NoTaskFoundException;
-import com.example.demo.models.dao.Group;
-import com.example.demo.models.dao.Project;
 import com.example.demo.models.dao.Task;
-import com.example.demo.models.dao.User;
 import com.example.demo.models.dto.TaskRequest;
 import com.example.demo.models.dto.TaskResponse;
 import com.example.demo.models.enums.TaskStatus;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.ProjectRepository;
 import com.example.demo.repository.TaskRepository;
-import com.example.demo.repository.UserRepository;
-import com.example.demo.security.utils.Helper;
 import com.example.demo.service.ProjectService;
 import com.example.demo.service.TaskService;
 import lombok.AllArgsConstructor;
@@ -27,10 +22,9 @@ import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.domain.Pageable;
 
 
-import java.util.ArrayList;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,7 +36,6 @@ public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
-    private final UserRepository userRepository;
     private final GroupRepository groupRepository;
     private final ConverterService converterService;
     private final ProjectService projectService;
@@ -54,8 +47,6 @@ public class TaskServiceImpl implements TaskService {
         groupRepository.findById(taskRequest.getGroupId()).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
         projectRepository.findById(taskRequest.getProjectId()).orElseThrow(()-> new NoProjectFoundException("No project associated with projectId"));
 
-
-        User user = userRepository.getUserById(Helper.getLoggedInUserId());
 
         Task task = new Task();
         task.setUserId(taskRequest.getUserId());
@@ -145,6 +136,8 @@ public class TaskServiceImpl implements TaskService {
         Task task = taskRepository.getById(id).orElseThrow(() -> new NoTaskFoundException("There is no task with that id, so it cannot be updated!"));
         task.setStatus(taskStatus);
         taskRepository.save(task);
+        log.info("Updating completion of the project...");
+        projectService.updateProjectCompletion(task.getProjectId());
         return "Task status is successfully updated...";
     }
 
@@ -152,6 +145,8 @@ public class TaskServiceImpl implements TaskService {
     public String deleteTaskById(String taskId) {
         Task task = taskRepository.getById(taskId).orElseThrow(() -> new NoTaskFoundException("There is no task with that id, so it cannot be updated!"));
         taskRepository.delete(task);
+        log.info("Updating completion of the project...");
+        projectService.updateProjectCompletion(task.getProjectId());
         return "Task is successfully deleted...";
     }
 

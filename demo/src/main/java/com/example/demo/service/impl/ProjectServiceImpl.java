@@ -1,22 +1,16 @@
 package com.example.demo.service.impl;
 
-import com.amazonaws.services.kms.model.NotFoundException;
 import com.example.demo.converters.ConverterService;
 import com.example.demo.exceptions.NoGroupFoundException;
 import com.example.demo.exceptions.NoProjectFoundException;
 import com.example.demo.models.dao.Project;
 import com.example.demo.models.dao.Task;
-import com.example.demo.models.dao.User;
-import com.example.demo.models.dto.ProjectDto;
-import com.example.demo.models.dto.ProjectFilterRequest;
 import com.example.demo.models.dto.ProjectRequest;
 import com.example.demo.models.dto.ProjectResponse;
 import com.example.demo.models.enums.TaskStatus;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.ProjectRepository;
 import com.example.demo.repository.TaskRepository;
-import com.example.demo.repository.UserRepository;
-import com.example.demo.security.utils.Helper;
 import com.example.demo.service.ProjectService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +22,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,7 +33,6 @@ import java.util.stream.Collectors;
 public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository projectRepository;
-    private final UserRepository userRepository;
     private final ConverterService converterService;
     private final MongoTemplate mongoTemplate;
     private final TaskRepository taskRepository;
@@ -49,7 +41,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public ProjectResponse createProject(ProjectRequest request) {
         groupRepository.findById(request.getGroupId()).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
-        User user = userRepository.getUserById(Helper.getLoggedInUserId());
+
 
 
         Project project = new Project();
@@ -68,66 +60,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     }
 
-    @Override
-    public ProjectResponse getProjectById(String id) {
-        Project project = projectRepository.findById(id).orElseThrow(() -> new NotFoundException("No projects associated with the id"));
-        log.info("Get project by id finished");
-        return converterService.convertToUserProjectDto(project);
-    }
+
 
     @Override
-    public List<ProjectResponse> filterProjects(String groupId, Pageable pageable, String search, ProjectFilterRequest request) {
-        groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
-        LocalDateTime now = LocalDateTime.now();
-        int pageNumber = pageable.getPageNumber();
-        int pageSize = pageable.getPageSize();
-
-        Criteria criteria = Criteria.where("groupId").is(groupId);
-        criteria.and("userId").ne(Helper.getLoggedInUserId());
-
-        // Add criteria here if needed in the future
-        // Here ...
-
-        MatchOperation matchOperation = Aggregation.match(criteria);
-
-        ProjectionOperation projectOperation = Aggregation.project()
-                .and("id").as("projectId")
-                .and("userId").as("userId")
-                .and ("groupId").as("groupId")
-                .and("name").as("name")
-                .and("description").as("description")
-                .and("startDate").as("startDate")
-                .and("endDate").as("endDate");
-
-        SortOperation sortOperation = Aggregation.sort(Sort.by(Sort.Direction.DESC, "createdAt"));
-
-        SkipOperation skipOperation = Aggregation.skip((long) pageNumber * pageSize);
-        LimitOperation limitOperation = Aggregation.limit(pageSize);
-
-        Aggregation aggregation = Aggregation.newAggregation(
-                matchOperation,
-                projectOperation,
-                sortOperation,
-                skipOperation,
-                limitOperation
-        );
-
-        AggregationResults<Project> results = mongoTemplate.aggregate(aggregation, "projects", Project.class);
-
-        return results
-                .getMappedResults()
-                .stream()
-                .map(converterService::convertToUserProjectDto)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public void updateProjectsJob() {
-
-    }
-
-    @Override
-    public String updateProjectCompletion(String id) {
+    public void updateProjectCompletion(String id) {
 
         Project project = projectRepository.findById(id).orElseThrow(() -> new NoProjectFoundException("No project with associated id"));
         log.info("Fetching project ");
@@ -141,7 +77,7 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
-        double completion = round((completionSum / taskList.size()) * 100, 2);
+        double completion = round((completionSum / taskList.size()) * 100);
 
 
         project.setCompletion(completion);
@@ -149,33 +85,100 @@ public class ProjectServiceImpl implements ProjectService {
         projectRepository.save(project);
 
 
-        return String.valueOf(completion);
+    }
+
+    @Override
+    public List<ProjectResponse> getAllProjects(String userId, String groupId,
+                                                Double startCompletion, Double endCompletion,
+                                                Boolean includeComplete, Boolean includeNotStarted,
+                                                String search, Pageable pageable) {
+
+        Criteria criteria = new Criteria();
+        criteria.and("userId").is(userId);
+
+        // Handle groupId filter
+        if (groupId != null && !groupId.isEmpty()) {
+            criteria.and("groupId").is(groupId);
+        }
+
+        // Handle search filter
+        if (search != null && !search.isEmpty()) {
+            criteria.and("name").regex(search, "i");
+        }
+
+        // Handle completion criteria
+        List<Criteria> completionRanges = new ArrayList<>();
+
+        // Check for completed or not started projects first
+        if (Boolean.TRUE.equals(includeComplete)) {
+            // Only show 100% complete projects
+            completionRanges.add(Criteria.where("completion").is(100.0));
+        } else if (Boolean.TRUE.equals(includeNotStarted)) {
+            // Only show 0% complete projects
+            completionRanges.add(Criteria.where("completion").is(0.0));
+        } else if (startCompletion != null || endCompletion != null) {
+            // Only apply range filter if neither includeComplete nor includeNotStarted is true
+            if (startCompletion != null && endCompletion != null) {
+                completionRanges.add(Criteria.where("completion").gt(0.0).lt(100.0)
+                        .andOperator(
+                                Criteria.where("completion").gte(startCompletion),
+                                Criteria.where("completion").lte(endCompletion)
+                        ));
+            } else if (startCompletion != null) {
+                completionRanges.add(Criteria.where("completion").gt(0.0).lt(100.0)
+                        .and("completion").gte(startCompletion));
+            } else {
+                completionRanges.add(Criteria.where("completion").gt(0.0).lt(100.0)
+                        .and("completion").lte(endCompletion));
+            }
+        }
+
+        // Add completion criteria if any exists
+        if (!completionRanges.isEmpty()) {
+            criteria.orOperator(completionRanges.toArray(new Criteria[0]));
+        }
+
+        MatchOperation matchOperation = Aggregation.match(criteria);
+
+        ProjectionOperation taskOperation = Aggregation.project()
+                .and("id").as("projectId")
+                .and("userId").as("userId")
+                .and("groupId").as("groupId")
+                .and("name").as("name")
+                .and("description").as("description")
+                .and("completion").as("completion")
+                .and("startDate").as("startDate")
+                .and("endDate").as("endDate");
+
+        SortOperation sortOperation = Aggregation.sort(Sort.by(Sort.Direction.DESC, "createdAt"));
+        SkipOperation skipOperation = Aggregation.skip((long) pageable.getPageNumber() * pageable.getPageSize());
+        LimitOperation limitOperation = Aggregation.limit(pageable.getPageSize());
+
+        Aggregation aggregation = Aggregation.newAggregation(
+                matchOperation,
+                taskOperation,
+                sortOperation,
+                skipOperation,
+                limitOperation
+        );
+
+        AggregationResults<Project> results = mongoTemplate.aggregate(aggregation, "projects", Project.class);
+        log.info("Found {} results", results.getMappedResults().size());
+
+        return results.getMappedResults()
+                .stream()
+                .map(converterService::convertToUserProjectDto)
+                .collect(Collectors.toList());
     }
 
     // helper method to round completion decimal to 2 decimal points...
-    private double round(double value, int places) {
-        if (places < 0) throw new IllegalArgumentException();
+    private double round(double value) {
 
-        long factor = (long) Math.pow(10, places);
+        long factor = (long) Math.pow(10, 2);
         value = value * factor;
         long tmp = Math.round(value);
         return (double) tmp / factor;
     }
 
-    @Override
-    public ProjectDto getActiveProjects(String groupId) {
-        // Possible future update...
-        return null;
-    }
 
-    @Override
-    public List<ProjectResponse> getAllProjects(String groupId) {
-        List<Project> allProjects = projectRepository.findAllByGroupId(groupId); // here is error remember for later
-        List<ProjectResponse> allProjectsDto = new ArrayList<>();
-        for (Project project : allProjects) {
-            ProjectResponse projectDto = converterService.convertToUserProjectDto(project);
-            allProjectsDto.add(projectDto);
-        }
-        return allProjectsDto;
-    }
 }

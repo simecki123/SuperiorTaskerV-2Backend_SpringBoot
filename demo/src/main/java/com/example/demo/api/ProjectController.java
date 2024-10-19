@@ -1,19 +1,19 @@
 package com.example.demo.api;
 
 import com.example.demo.exceptions.NoGroupFoundException;
-import com.example.demo.models.dto.GroupRequest;
-import com.example.demo.models.dto.GroupResponse;
-import com.example.demo.models.dto.ProjectRequest;
-import com.example.demo.models.dto.ProjectResponse;
+import com.example.demo.models.dto.*;
 import com.example.demo.service.ProjectService;
 import com.example.demo.config.openapi.ShowAPI;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
+import java.util.List;
 
 @RestController
 @RequestMapping("api/projects")
@@ -34,5 +34,37 @@ public class ProjectController {
             return ResponseEntity.badRequest().build();
         }
 
+    }
+
+    @GetMapping("/getFilteredProjects")
+    public ResponseEntity<List<ProjectResponse>> getFilteredProjects(
+            @RequestParam String userId,
+            @RequestParam(required = false) String groupId,
+            @RequestParam(required = false) Double startCompletion,  // Changed to Double object
+            @RequestParam(required = false) Double endCompletion,    // Added end range
+            @RequestParam(required = false) Boolean includeComplete, // Option to include 100% complete
+            @RequestParam(required = false) Boolean includeNotStarted, // Option to include 0%
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "4") int size
+    ) {
+        log.info("Received request with userId: {}", userId);
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            List<ProjectResponse> projects = projectService.getAllProjects(
+                    userId, groupId, startCompletion, endCompletion,
+                    includeComplete, includeNotStarted, search, pageable);
+
+            if (projects.isEmpty()) {
+                log.info("No projects found for userId: {}", userId);
+                return ResponseEntity.ok(Collections.emptyList());
+            }
+
+            log.info("Found {} projects", projects.size());
+            return ResponseEntity.ok(projects);
+        } catch (Exception e) {
+            log.error("Error in getFilteredProjects: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }
