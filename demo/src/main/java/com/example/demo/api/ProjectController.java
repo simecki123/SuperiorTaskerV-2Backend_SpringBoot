@@ -1,6 +1,7 @@
 package com.example.demo.api;
 
 import com.example.demo.exceptions.NoGroupFoundException;
+import com.example.demo.exceptions.NoProjectFoundException;
 import com.example.demo.models.dto.*;
 import com.example.demo.service.ProjectService;
 import com.example.demo.config.openapi.ShowAPI;
@@ -64,7 +65,21 @@ public class ProjectController {
             return ResponseEntity.ok(projects);
         } catch (Exception e) {
             log.error("Error in getFilteredProjects: ", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/delete-project")
+    public ResponseEntity<String> deleteProject(@RequestParam String projectId) {
+        try {
+
+            log.info("Deleting project by his id...");
+            return ResponseEntity.ok(projectService.deleteProjectById(projectId));
+        }catch (NoProjectFoundException e ){
+            log.error("Error in finding project with that id");
+            return ResponseEntity.notFound().build();
+        }catch (Error e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 }

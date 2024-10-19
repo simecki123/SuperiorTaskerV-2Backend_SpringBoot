@@ -4,6 +4,7 @@ import com.example.demo.converters.ConverterService;
 import com.example.demo.exceptions.NoGroupFoundException;
 import com.example.demo.exceptions.NoProjectFoundException;
 import com.example.demo.exceptions.NoTaskFoundException;
+import com.example.demo.models.dao.Project;
 import com.example.demo.models.dao.Task;
 import com.example.demo.models.dto.TaskRequest;
 import com.example.demo.models.dto.TaskResponse;
@@ -24,7 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -129,6 +130,19 @@ public class TaskServiceImpl implements TaskService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<TaskResponse> getAllTasksByProjectId(String projectId) {
+        Project project = projectRepository.findById(projectId).orElseThrow(() -> new NoProjectFoundException("There is no project with thatId") );
+        log.info("Searching for tasks with specific project id...");
+
+        List<Task> taskList = taskRepository.findAllByProjectId(projectId);
+        return taskList.stream()
+                .map(converterService::convertToUserTaskDto)
+                .collect(Collectors.toList());
+
+
+
+    }
 
 
     @Override

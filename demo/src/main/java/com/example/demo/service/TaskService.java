@@ -13,6 +13,7 @@ public interface TaskService {
 
     List<TaskResponse> getAllTasksForUser(String userId, String groupId, String projectId, TaskStatus taskStatus, String search, Pageable pageable );
 
+    List<TaskResponse> getAllTasksByProjectId(String projectId);
     String updateTaskStatus(String id, TaskStatus taskStatus);
 
     String deleteTaskById(String taskId);

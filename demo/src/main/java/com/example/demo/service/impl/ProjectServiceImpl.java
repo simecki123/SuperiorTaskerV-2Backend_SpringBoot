@@ -3,10 +3,12 @@ package com.example.demo.service.impl;
 import com.example.demo.converters.ConverterService;
 import com.example.demo.exceptions.NoGroupFoundException;
 import com.example.demo.exceptions.NoProjectFoundException;
+import com.example.demo.models.dao.Group;
 import com.example.demo.models.dao.Project;
 import com.example.demo.models.dao.Task;
 import com.example.demo.models.dto.ProjectRequest;
 import com.example.demo.models.dto.ProjectResponse;
+import com.example.demo.models.dto.TaskResponse;
 import com.example.demo.models.enums.TaskStatus;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.ProjectRepository;
@@ -170,6 +172,40 @@ public class ProjectServiceImpl implements ProjectService {
                 .map(converterService::convertToUserProjectDto)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public String deleteProjectById(String projectId) {
+        Project project = projectRepository.findById(projectId).orElseThrow(() -> new NoProjectFoundException("There is no project with that id present..."));
+        projectRepository.delete(project);
+        deleteProjectTasks(projectId);
+
+        log.info("Project is deleted as well as his tasks...");
+        return "Project and his tasks deleted successfully...";
+
+
+    }
+
+    @Override
+    public String deleteProjectByGroupId(String groupId) {
+        Group group = groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("There is no group with this id ..."));
+        List<Project> projectList = projectRepository.findAllByGroupId(groupId);
+        for (Project project : projectList){
+            projectRepository.delete(project);
+        }
+        log.info("Deleting all projects that belong to that group...");
+        return "AllProjects of the group are deleted";
+    }
+
+
+    // Helper method that will delete all project tasks if needed...
+    private void deleteProjectTasks(String projectId){
+        List<Task> projectTasks = taskRepository.findAllByProjectId(projectId);
+        for(Task task : projectTasks) {
+            taskRepository.delete(task);
+        }
+    }
+
+
 
     // helper method to round completion decimal to 2 decimal points...
     private double round(double value) {

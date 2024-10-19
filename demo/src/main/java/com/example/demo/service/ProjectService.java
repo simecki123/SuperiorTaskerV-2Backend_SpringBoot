@@ -16,6 +16,7 @@ public interface ProjectService {
                                          Boolean includeComplete, Boolean includeNotStarted,
                                          String search, Pageable pageable);
 
-    
+    String deleteProjectById(String projectId);
+    String deleteProjectByGroupId(String groupId);
 
 }
