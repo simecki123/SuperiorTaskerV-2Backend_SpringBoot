@@ -40,7 +40,7 @@ public class TaskController {
 
     @GetMapping("/getFilteredTasks")
     public ResponseEntity<List<TaskResponse>> getFilteredTasks(
-            @RequestParam String userId,
+            @RequestParam(required = false) String userId,
             @RequestParam(required = false) String groupId,
             @RequestParam(required = false) String projectId,
             @RequestParam(required = false) TaskStatus status,
@@ -75,6 +75,11 @@ public class TaskController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @PatchMapping("/change-task-user")
+    public ResponseEntity<String> changeUserOfTheTask(@RequestParam String taskId, @RequestParam String newUserId){
+        return null;
     }
 
     @DeleteMapping("/delete-task")

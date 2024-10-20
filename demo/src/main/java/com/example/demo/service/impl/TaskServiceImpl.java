@@ -80,9 +80,12 @@ public class TaskServiceImpl implements TaskService {
         log.info("Searching for tasks with userId: {}", userId);
 
         Criteria criteria = new Criteria();
-        criteria.and("userId").is(userId);
+
 
         // Optionally include groupId, projectId, taskStatus, and search
+        if (userId != null && !userId.isEmpty()) {
+            criteria.and("userId").is(userId);
+        }
         if (groupId != null && !groupId.isEmpty()) {
             criteria.and("groupId").is(groupId);
         }

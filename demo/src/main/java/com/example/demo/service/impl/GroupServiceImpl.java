@@ -4,16 +4,20 @@ import com.amazonaws.services.kms.model.NotFoundException;
 import com.example.demo.converters.ConverterService;
 import com.example.demo.exceptions.GroupAlreadyExistsException;
 import com.example.demo.exceptions.NoGroupFoundException;
+import com.example.demo.exceptions.NoUserFoundException;
 import com.example.demo.models.dao.Group;
+import com.example.demo.models.dao.User;
 import com.example.demo.models.dao.UserGroupRelation;
 import com.example.demo.models.dto.*;
 import com.example.demo.models.enums.Role;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.UserGroupRelationRepository;
+import com.example.demo.repository.UserRepository;
 import com.example.demo.security.services.AuthService;
 import com.example.demo.security.utils.Helper;
 import com.example.demo.service.AmazonS3Service;
 import com.example.demo.service.GroupService;
+import com.example.demo.service.UserGroupRelationService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,8 +32,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.data.domain.Pageable;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -38,10 +44,9 @@ import java.util.Optional;
 public class GroupServiceImpl implements GroupService {
 
     private final GroupRepository groupRepository;
+    private final UserRepository userRepository;
 
     private final ConverterService converterService;
-
-    private final PasswordEncoder passwordEncoder;
 
     private final MongoTemplate mongoTemplate;
 
@@ -50,6 +55,7 @@ public class GroupServiceImpl implements GroupService {
     private final AmazonS3Service amazonS3Service;
 
     private final AuthService authService;
+    private final UserGroupRelationService userGroupRelationService;
 
 
     @Override
@@ -202,44 +208,22 @@ public class GroupServiceImpl implements GroupService {
         return response;
     }
 
+    // currently developing
     @Override
-    public List<GroupDto> getProfileGroups() {
-        if (Helper.getLoggedInUserId() == null) {
-            throw new IllegalStateException("Bad user profile id present");
+    public List<GroupDto> getAllUserGroups(String userId) {
+        log.info("Fetching user memberships");
+        List<UserGroupRelation> allUsersGroupMemberships = groupMembershipRepository.findAllByUserId(userId);
+        List<Group> userGroups = new ArrayList<>();
+
+        for(UserGroupRelation userGroupRelation : allUsersGroupMemberships) {
+            Group group = groupRepository.findById(userGroupRelation.getGroupId())
+                    .orElseThrow(()-> new NoGroupFoundException("There is a relation between user and a group that doesnt exist"));
+            userGroups.add(group);
         }
 
-        MatchOperation matchOperation = Aggregation.match(Criteria.where("userProfileId").is(Helper.getLoggedInUserId()));
-
-        AddFieldsOperation addFieldsOperation = Aggregation.addFields()
-                .addField("groupId")
-                .withValueOf(ConvertOperators.ToObjectId.toObjectId("$groupId"))
-                .build();
-
-
-        LookupOperation lookupOperation = Aggregation.lookup("groups", "groupId", "_id", "group");
-
-        UnwindOperation unwindOperation = Aggregation.unwind("group");
-
-        ProjectionOperation projectionOperation = Aggregation.project()
-                .andExclude("_id")
-                .and("group._id").as("_id")
-                .and("group.name").as("name")
-                .and("group.description").as("description")
-                .and("group.photoUri").as("photoUri");
-
-        Aggregation aggregation = Aggregation.newAggregation(
-                matchOperation,
-                addFieldsOperation,
-                lookupOperation,
-                unwindOperation,
-                projectionOperation
-        );
-
-        AggregationResults<Group> results = mongoTemplate.aggregate(aggregation, "UserGroupRelation", Group.class);
-
-        return results.getMappedResults().stream()
+        return userGroups.stream()
                 .map(converterService::convertToGroupDto)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -253,56 +237,22 @@ public class GroupServiceImpl implements GroupService {
 
 
 
+    // important to get all user profiles that belong to some group...
     @Override
     public List<GroupMemberResponse> getGroupMembers(String groupId, Pageable pageable) {
         groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
+        List<UserGroupRelationDto> userGroupRelationResponses = userGroupRelationService.getMembershipsByGroupId(groupId,pageable);
+        List<GroupMemberResponse> groupUsers = new ArrayList<>();
+        for (UserGroupRelationDto userGroupRelationResponse : userGroupRelationResponses) {
+             User user = userRepository.findById(userGroupRelationResponse
+                     .getUserId())
+                     .orElseThrow(()->  new NoUserFoundException("Trying to fetch a user that doesn't exist"));
 
-        int pageNumber = pageable.getPageNumber();
-        int pageSize = pageable.getPageSize();
+             groupUsers.add(converterService.convertUserToGroupMemberResponse(user, userGroupRelationResponse.getUserRole()));
 
-        MatchOperation matchOperation = Aggregation.match(Criteria.where("groupId").is(groupId));
+        }
 
-        AddFieldsOperation addFieldsOperation = Aggregation.addFields()
-                .addField("userId")
-                .withValueOf(ConvertOperators.ToObjectId.toObjectId("$userId"))
-                .build();
-
-        LookupOperation lookupOperation = Aggregation.lookup("users", "userId", "_id", "user");
-
-        UnwindOperation unwindOperation = Aggregation.unwind("user");
-
-        ProjectionOperation projectionOperation = Aggregation.project()
-                .andExclude("_id")
-                .andInclude("userId")
-                .andInclude("roles")
-                .and("user.firstName").as("firstName")
-                .and("user.lastName").as("lastName")
-                .and("user.photoUri").as("photoUrl");
-
-        SortOperation sortOperation = Aggregation.sort(Sort.by(Sort.Direction.ASC, "firstName", "lastName"));
-
-        SkipOperation skipOperation = Aggregation.skip((long) pageNumber * pageSize);
-
-        LimitOperation limitOperation = Aggregation.limit(pageSize);
-
-        Aggregation aggregation = Aggregation.newAggregation(
-                matchOperation,
-                addFieldsOperation,
-                lookupOperation,
-                unwindOperation,
-                projectionOperation,
-                sortOperation,
-                skipOperation,
-                limitOperation
-        );
-
-        AggregationResults<GroupMemberDto> results = mongoTemplate.aggregate(aggregation,
-                "groupMemberships", GroupMemberDto.class);
-
-
-        return results.getMappedResults().stream()
-                .map(converterService::convertToGroupMemberResponse)
-                .toList();
+        return groupUsers;
 
     }
 
@@ -327,20 +277,26 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public void promoteUser(String groupId, String userId, Role role) {
-        groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
+    public void promoteUser(ChangeGroupAdminDto changeGroupAdminDto) {
+        groupRepository.findById(changeGroupAdminDto.getGroupId()).orElseThrow(
+                () -> new NoGroupFoundException("No group associated with the groupId"));
 
-        UserGroupRelation membership = groupMembershipRepository.findByUserIdAndGroupId(userId, groupId);
+        UserGroupRelation membership = groupMembershipRepository.findByUserIdAndGroupId(changeGroupAdminDto.getUserId(),
+                changeGroupAdminDto.getGroupId());
+
         if (membership == null) {
             throw new NotFoundException("User is not a member of this group");
         }
 
-        if (!membership.getRole().equals(role)) {
-            membership.setRole(role);
+        if (!membership.getRole().equals(changeGroupAdminDto.getRole())) {
+            membership.setRole(changeGroupAdminDto.getRole());
             groupMembershipRepository.save(membership);
-            log.info("Role {} assigned to user {} in group {}", role, userId, groupId);
+            log.info("Role {} assigned to user {} in group {}", changeGroupAdminDto.getRole(), changeGroupAdminDto.getUserId(),
+                    changeGroupAdminDto.getGroupId());
         } else {
-            log.info("User {} already has role {} in group {}", userId, role, groupId);
+            log.info("User {} already has role {} in group {}", changeGroupAdminDto.getUserId(),
+                    changeGroupAdminDto.getRole(),
+                    changeGroupAdminDto.getGroupId());
         }
 
     }

@@ -14,6 +14,6 @@ public class GroupMemberDto {
     private String userId;
     private String firstName;
     private String lastName;
-    private List<Role> roles;
+    private Role role;
     private String photoUrl;
 }

@@ -1,5 +1,6 @@
 package com.example.demo.converters.impl;
 
+import com.example.demo.models.enums.Role;
 import com.example.demo.repository.UserGroupRelationRepository;
 import com.example.demo.service.AmazonS3Service;
 import com.example.demo.converters.ConverterService;
@@ -51,8 +52,19 @@ public class ConverterServiceImpl implements ConverterService {
         response.setUserId(groupMemberDto.getUserId());
         response.setFirstName(groupMemberDto.getFirstName());
         response.setLastName(groupMemberDto.getLastName());
-        response.setRoles(groupMemberDto.getRoles());
+        response.setRole(groupMemberDto.getRole());
         response.setPhotoUrl(convertPhotoUriToUrl(groupMemberDto.getPhotoUrl()));
+        return response;
+    }
+
+    @Override
+    public GroupMemberResponse convertUserToGroupMemberResponse(User user, Role role) {
+        GroupMemberResponse response = new GroupMemberResponse();
+        response.setUserId(user.getId());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+        response.setRole(role);
+        response.setPhotoUrl(convertPhotoUriToUrl(user.getPhotoUri()));
         return response;
     }
 
@@ -64,6 +76,9 @@ public class ConverterServiceImpl implements ConverterService {
         response.setPhotoUri(url);
         return response;
     }
+
+
+
 
     @Override
     public MessageDto convertToMessageDto(Message message) {

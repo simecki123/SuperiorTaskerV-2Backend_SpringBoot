@@ -39,7 +39,7 @@ public class ProjectController {
 
     @GetMapping("/getFilteredProjects")
     public ResponseEntity<List<ProjectResponse>> getFilteredProjects(
-            @RequestParam String userId,
+            @RequestParam(required = false) String userId,
             @RequestParam(required = false) String groupId,
             @RequestParam(required = false) Double startCompletion,  // Changed to Double object
             @RequestParam(required = false) Double endCompletion,    // Added end range

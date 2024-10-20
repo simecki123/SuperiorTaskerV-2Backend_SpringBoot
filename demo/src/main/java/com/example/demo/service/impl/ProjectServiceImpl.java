@@ -96,7 +96,12 @@ public class ProjectServiceImpl implements ProjectService {
                                                 String search, Pageable pageable) {
 
         Criteria criteria = new Criteria();
-        criteria.and("userId").is(userId);
+
+
+        //handle userId filter
+        if (userId != null && !userId.isEmpty()) {
+            criteria.and("userId").is(userId);
+        }
 
         // Handle groupId filter
         if (groupId != null && !groupId.isEmpty()) {
@@ -191,6 +196,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<Project> projectList = projectRepository.findAllByGroupId(groupId);
         for (Project project : projectList){
             projectRepository.delete(project);
+            deleteProjectTasks(project.getId());
         }
         log.info("Deleting all projects that belong to that group...");
         return "AllProjects of the group are deleted";

@@ -14,9 +14,9 @@ public interface GroupService {
     List<GroupProjectCountDto> countGroupProjects(String groupId);
     List<GroupTaskCountDto> countGroupTasks(String groupId);
     GroupEditResponse editGroupInfo(String groupId, String name, String description, MultipartFile photoFile);
-    List<GroupDto> getProfileGroups();
+    List<GroupDto> getAllUserGroups(String userId);
     UserGroupRelationDto getGroupRoles(String groupId);
     List<GroupMemberResponse> getGroupMembers(String groupId, Pageable pageable);
     void kickUserFromGroup(String groupId, String userProfileId);
-    void promoteUser(String groupId, String userId, Role role);
+    void promoteUser(ChangeGroupAdminDto changeGroupAdminDto);
 }
