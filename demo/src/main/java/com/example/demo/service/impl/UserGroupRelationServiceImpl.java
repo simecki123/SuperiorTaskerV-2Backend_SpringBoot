@@ -1,19 +1,21 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.converters.ConverterService;
-import com.example.demo.exceptions.NoGroupFoundException;
-import com.example.demo.exceptions.NoUserFoundException;
+import com.example.demo.exceptions.*;
 import com.example.demo.models.dao.Task;
 import com.example.demo.models.dao.User;
 import com.example.demo.models.dao.UserGroupRelation;
+import com.example.demo.models.dto.UserDto;
 import com.example.demo.models.dto.UserGroupRelationDto;
 import com.example.demo.models.dto.UserGroupRelationRequest;
 import com.example.demo.models.dto.UserGroupRelationResponse;
 
+import com.example.demo.models.enums.Role;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.ProjectRepository;
 import com.example.demo.repository.UserGroupRelationRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.security.services.AuthService;
 import com.example.demo.security.utils.Helper;
 import com.example.demo.service.UserGroupRelationService;
 import lombok.AllArgsConstructor;
@@ -39,6 +41,7 @@ public class UserGroupRelationServiceImpl implements UserGroupRelationService {
    private final UserGroupRelationRepository userGroupRelationRepository;
     private final ConverterService converterService;
     private final MongoTemplate mongoTemplate;
+    private final AuthService authService;
 
 
     @Override
@@ -74,5 +77,64 @@ public class UserGroupRelationServiceImpl implements UserGroupRelationService {
                 .stream()
                 .map(converterService::convertToUserGroupRelation)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public UserGroupRelationResponse createNewUserGroupRelation(String userId, String groupId) throws UserGroupRelationAlreadyExistsException {
+        groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
+        userRepository.findById(userId).orElseThrow(() -> new NoUserFoundException("User doesn't exist..."));
+        UserGroupRelation alreadyPresentUserGroupRelation =userGroupRelationRepository.findByUserIdAndGroupId(userId, groupId);
+        if(alreadyPresentUserGroupRelation != null) {
+            throw new UserGroupRelationAlreadyExistsException("This user is already a member of this group");
+        }
+
+        UserGroupRelation newUserGroupRelation = new UserGroupRelation();
+        newUserGroupRelation.setGroupId(groupId);
+        newUserGroupRelation.setUserId(userId);
+        newUserGroupRelation.setRole(Role.USER);
+
+        userGroupRelationRepository.save(newUserGroupRelation);
+
+        UserGroupRelationResponse userGroupRelationResponse = new UserGroupRelationResponse();
+        userGroupRelationResponse.setId(newUserGroupRelation.getId());
+        userGroupRelationResponse.setGroupId(newUserGroupRelation.getGroupId());
+        userGroupRelationResponse.setGroupId(newUserGroupRelation.getGroupId());
+        userGroupRelationResponse.setRole(newUserGroupRelation.getRole());
+
+        return userGroupRelationResponse;
+
+    }
+
+    @Override
+    public String leaveGroup(String userId, String groupId) throws NoUserGroupRelation {
+        groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
+        userRepository.findById(userId).orElseThrow(() -> new NoUserFoundException("User doesn't exist..."));
+
+        UserGroupRelation userGroupRelation = userGroupRelationRepository.findByUserIdAndGroupId(userId, groupId);
+        if(userGroupRelation != null) {
+            userGroupRelationRepository.delete(userGroupRelation);
+            return "User removed form group successfully";
+        } else  {
+            throw new NoUserGroupRelation("User is not a member of this group...");
+        }
+    }
+
+    @Override
+    public String kickUser(String userId, String groupId) throws NoUserGroupRelation, CantKickYourselfException {
+        groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
+         User user = userRepository.findById(userId).orElseThrow(() -> new NoUserFoundException("User doesn't exist..."));
+         UserDto user1 = authService.fetchMe();
+
+        UserGroupRelation userGroupRelation = userGroupRelationRepository.findByUserIdAndGroupId(userId, groupId);
+        if(!user.getEmail().equals(user1.getEmail())) {
+            if(userGroupRelation != null) {
+                userGroupRelationRepository.delete(userGroupRelation);
+                return "User removed from group successfully";
+            } else  {
+                throw new NoUserGroupRelation("User is not a member of this group...");
+            }
+        } else {
+            throw new CantKickYourselfException("Cant kick yourself from the group you are admin of ...");
+        }
     }
 }

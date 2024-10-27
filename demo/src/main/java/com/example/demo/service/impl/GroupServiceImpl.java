@@ -178,12 +178,11 @@ public class GroupServiceImpl implements GroupService {
 
         if (photoFile != null) {
             try {
-                String fileName = groupId;
                 String path = "groupPhotos";
 
-                amazonS3Service.updateFileInS3(path, fileName, photoFile.getInputStream());
+                amazonS3Service.updateFileInS3(path, groupId, photoFile.getInputStream());
 
-                group.setPhotoUri(path + "/" + fileName);
+                group.setPhotoUri(path + "/" + groupId);
 
                 log.info("Group photo updated successfully");
             } catch (IOException e) {
@@ -208,7 +207,7 @@ public class GroupServiceImpl implements GroupService {
         return response;
     }
 
-    // currently developing
+
     @Override
     public List<GroupDto> getAllUserGroups(String userId) {
         log.info("Fetching user memberships");
