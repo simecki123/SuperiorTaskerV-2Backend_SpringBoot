@@ -81,13 +81,15 @@ public class ConverterServiceImpl implements ConverterService {
 
 
     @Override
-    public MessageDto convertToMessageDto(Message message) {
-        MessageDto messageDto = new MessageDto();
-        messageDto.setProjectId(message.getProjectId());
-        messageDto.setGroupId(message.getGroupId());
-        messageDto.setMessage(message.getMessage());
-        messageDto.setCreatedAt(message.getCreatedAt());
-        return messageDto;
+    public MessageResponse convertToMessageResponse(Message message) {
+        MessageResponse messageResponse = new MessageResponse();
+        messageResponse.setId(message.getId());
+        messageResponse.setMessage(message.getMessage());
+        messageResponse.setMessageStatus(message.getMessageStatus());
+        messageResponse.setFirstName(message.getFirstName());
+        messageResponse.setLastName(message.getLastName());
+        messageResponse.setPhotoUri(message.getPhotoUri());
+        return messageResponse;
     }
 
     @Override

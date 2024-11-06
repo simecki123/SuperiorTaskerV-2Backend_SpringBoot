@@ -44,8 +44,6 @@ public class ProjectServiceImpl implements ProjectService {
     public ProjectResponse createProject(ProjectRequest request) {
         groupRepository.findById(request.getGroupId()).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
 
-
-
         Project project = new Project();
         project.setUserId(request.getUserid());
         project.setGroupId(request.getGroupId());

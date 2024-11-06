@@ -1,5 +1,6 @@
 package com.example.demo.models.dao;
 
+import com.example.demo.models.enums.MessageStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -23,21 +24,19 @@ public class Message {
 
     @NotBlank
     @Size(max = 50)
-    private String projectId;
-
-    @NotBlank
-    @Size(max = 50)
     private String groupId;
 
     @NotBlank
     @Size(max = 200)
     private String message;
+    @NotBlank
+    private MessageStatus messageStatus;
+
 
     //User who made message
     private String userProfileId;
     private String firstName;
     private String lastName;
-    private String eventId;
     private String photoUri;
 
     @CreatedDate

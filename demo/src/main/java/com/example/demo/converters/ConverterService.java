@@ -12,7 +12,7 @@ public interface ConverterService {
     GroupMemberResponse convertToGroupMemberResponse(GroupMemberDto groupMemberDto);
     UserProfileEditResponse convertToUserProfileResponse(UserProfileRequest userProfileRequest);
     GroupMemberResponse convertUserToGroupMemberResponse(User user, Role role);
-    MessageDto convertToMessageDto(Message message);
+    MessageResponse convertToMessageResponse(Message message);
     UserGroupRelationDto convertToUserGroupRelation(UserGroupRelation userGroupRelation);
     List<UserGroupRelationDto> convertToUserGroupRelation(List<UserGroupRelation> userGroupRelationList);
     ProjectResponse convertToUserProjectDto(Project project);

@@ -2,8 +2,14 @@ package com.example.demo.service.impl;
 
 import com.example.demo.converters.ConverterService;
 import com.example.demo.exceptions.NoGroupFoundException;
+import com.example.demo.exceptions.NoMessageException;
+import com.example.demo.exceptions.NoUserFoundException;
 import com.example.demo.models.dao.User;
+import com.example.demo.models.dto.MessageRequest;
+import com.example.demo.models.dto.MessageResponse;
+import com.example.demo.models.enums.MessageStatus;
 import com.example.demo.repository.GroupRepository;
+import com.example.demo.repository.MessageRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.utils.Helper;
 import com.example.demo.service.MessageService;
@@ -26,6 +32,7 @@ import java.util.List;
 @Slf4j
 @AllArgsConstructor
 public class MessageServiceImpl implements MessageService {
+    private final MessageRepository messageRepository;
 
     private final UserRepository userProfileRepository;
 
@@ -36,29 +43,48 @@ public class MessageServiceImpl implements MessageService {
     private final GroupRepository groupRepository;
 
     @Override
+    public MessageResponse createMessage(MessageRequest messageRequest) {
+        groupRepository.findById(messageRequest.getGroupId()).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
+        User user = userProfileRepository.findById(messageRequest.getUserId()).orElseThrow(() -> new NoUserFoundException("No user associated with user Id"));
+
+        Message message = new Message();
+        message.setGroupId(messageRequest.getGroupId());
+        message.setUserProfileId(messageRequest.getUserId());
+        message.setMessage(messageRequest.getMessage());
+        message.setMessageStatus(MessageStatus.UNREAD);
+        message.setFirstName(user.getFirstName());
+        message.setLastName(user.getLastName());
+        message.setPhotoUri(user.getPhotoUri());
+
+        messageRepository.save(message);
+        log.info("Message created ...");
+
+        return converterService.convertToMessageResponse(message);
+    }
+
+    @Override
+    public String editMessage(String messageId, MessageStatus messageStatus) {
+        Message message = messageRepository.findById(messageId).orElseThrow(() -> new NoMessageException("There is no message with associated id"));
+        message.setMessageStatus(messageStatus);
+        messageRepository.save(message);
+        return "Message updated";
+
+    }
+
+    @Override
     public List<Message> getAllMessages(String groupId, Pageable pageable) {
         groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
         User user = userProfileRepository.getUserById(Helper.getLoggedInUserId());
-        List<Message> messages = new ArrayList<>();
 
         int pageNumber = pageable.getPageNumber();
         int pageSize = pageable.getPageSize();
 
-        MatchOperation matchOperation = Aggregation.match(
-                new Criteria().orOperator(
-                        Criteria.where("notificationType").is("ORDER")
-                                .and("recipientUserProfileId").is(user.getId()),
-                        Criteria.where("notificationType").is("EVENT")
-                                .and("userProfileId").ne(user.getId())
-                )
-        );
+
 
         ProjectionOperation projectOperation = Aggregation.project()
-                .andInclude("notificationType", "orderId", "userId", "firstName", "lastName",
-                        "eventId", "additionalOptions", "createdAt", "photoUri", "groupId",
-                        "title", "description")
-                .and("photoUri").as("profilePhoto")
-                .andExclude("_id");
+                .andInclude("id", "groupId", "message", "messageStatus", "userProfileId",
+                        "firstName", "lastName", "photoUri", "createdAt", "updatedAt");
+
 
         SkipOperation skipOperation = Aggregation.skip((long) pageNumber * pageSize);
         LimitOperation limitOperation = Aggregation.limit(pageSize);
@@ -66,7 +92,6 @@ public class MessageServiceImpl implements MessageService {
         SortOperation sortOperation = Aggregation.sort(Sort.by(Sort.Direction.DESC, "createdAt"));
 
         Aggregation aggregation  = Aggregation.newAggregation(
-                matchOperation,
                 projectOperation,
                 sortOperation,
                 skipOperation,
@@ -74,7 +99,7 @@ public class MessageServiceImpl implements MessageService {
         );
 
         AggregationResults<Message> results = mongoTemplate.aggregate(aggregation , "messages", Message.class);
-        messages.addAll(results.getMappedResults());
+        List<Message> messages = new ArrayList<>(results.getMappedResults());
 
         messages.forEach(message -> {
             if (message.getPhotoUri() != null) {
