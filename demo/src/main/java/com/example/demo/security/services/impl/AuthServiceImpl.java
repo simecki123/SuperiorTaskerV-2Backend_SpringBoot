@@ -47,7 +47,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public UserDto fetchMe() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDto userDto = new UserDto();
 
         if (authentication != null && authentication.getPrincipal() != null && authentication.getPrincipal() instanceof UserDetailsImpl userDetails) {
             userRepository.findByEmail(userDetails.getEmail())
@@ -58,13 +57,7 @@ public class AuthServiceImpl implements AuthService {
             User user = userRepository.getUserById(userDetails.getId());
             System.out.println(user);
 
-            userDto.setFirstName(user.getFirstName());
-            userDto.setLastName(user.getLastName());
-            userDto.setGroupMembershipData(userGroupRelationList);
-            userDto.setDescription(user.getDescription());
-            userDto.setProfileUri(user.getPhotoUri());
-            userDto.setEmail(((UserDetailsImpl) authentication.getPrincipal()).getEmail());
-
+            UserDto userDto = converterService.convertToUserDto(user);
 
             log.info("User successfully \"{}\" fetched.", userDto);
             return userDto;

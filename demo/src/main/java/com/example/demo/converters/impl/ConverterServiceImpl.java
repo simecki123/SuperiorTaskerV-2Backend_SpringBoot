@@ -26,6 +26,7 @@ public class ConverterServiceImpl implements ConverterService {
     @Override
     public UserDto convertToUserDto(User user) {
         UserDto userDto = new UserDto();
+        userDto.setId(user.getId());
         userDto.setEmail(user.getEmail());
         userDto.setFirstName(user.getFirstName());
         userDto.setLastName(user.getLastName());
@@ -40,6 +41,7 @@ public class ConverterServiceImpl implements ConverterService {
     @Override
     public GroupDto convertToGroupDto(Group group) {
         GroupDto groupDto = new GroupDto();
+        groupDto.setId(group.getId());
         groupDto.setName(group.getName());
         groupDto.setDescription(group.getDescription());
         groupDto.setPhotoUri(convertPhotoUriToUrl(group.getPhotoUri()));

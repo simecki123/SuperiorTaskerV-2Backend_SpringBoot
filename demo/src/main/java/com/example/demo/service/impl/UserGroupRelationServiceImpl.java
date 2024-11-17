@@ -45,6 +45,41 @@ public class UserGroupRelationServiceImpl implements UserGroupRelationService {
 
 
     @Override
+    public List<UserGroupRelationDto> getMembershipsByUserId(String userId, Pageable pageable) {
+        log.info("Fetching all user group relations for this group...");
+        Criteria criteria = new Criteria();
+        criteria.and("userId").is(userId);
+
+        MatchOperation matchOperation = Aggregation.match(criteria);
+
+        ProjectionOperation userGroupRelationOperation = Aggregation.project()
+                .and("id").as("id")
+                .and("userId").as("userId")
+                .and("groupId").as("groupId")
+                .and("role").as("role");
+
+        SkipOperation skipOperation = Aggregation.skip((long) pageable.getPageNumber() * pageable.getPageSize());
+        LimitOperation limitOperation = Aggregation.limit(pageable.getPageSize());
+
+        Aggregation aggregation = Aggregation.newAggregation(
+                matchOperation,
+                userGroupRelationOperation,
+                skipOperation,
+                limitOperation
+        );
+
+        AggregationResults<UserGroupRelation> results = mongoTemplate
+                .aggregate(aggregation, "user-group-relation", UserGroupRelation.class);
+        log.info("Found {} results", results.getMappedResults().size());
+
+
+        return results.getMappedResults()
+                .stream()
+                .map(converterService::convertToUserGroupRelation)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<UserGroupRelationDto> getMembershipsByGroupId(String groupId, Pageable pageable) {
         log.info("Fetching all user group relations for this group...");
         Criteria criteria = new Criteria();

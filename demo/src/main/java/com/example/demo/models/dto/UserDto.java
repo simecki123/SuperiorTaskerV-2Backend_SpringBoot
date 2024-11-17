@@ -13,6 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDto {
+    private String id;
     private String email;
     private String firstName;
     private String lastName;

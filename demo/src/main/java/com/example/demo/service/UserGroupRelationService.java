@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface UserGroupRelationService {
+    List<UserGroupRelationDto> getMembershipsByUserId(String userId, Pageable pageable);
     List<UserGroupRelationDto> getMembershipsByGroupId(String groupId, Pageable pageable);
     UserGroupRelationResponse createNewUserGroupRelation(String userId, String groupId) throws UserGroupRelationAlreadyExistsException;
     String leaveGroup(String userId, String groupId) throws NoUserGroupRelation;

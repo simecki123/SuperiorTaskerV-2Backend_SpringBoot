@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserProfileEditResponse {
+
     @NotBlank
     private String photoUri;
 

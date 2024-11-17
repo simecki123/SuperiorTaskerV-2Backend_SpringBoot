@@ -46,10 +46,14 @@ public class GroupController {
 
 
     @GetMapping("/get-all-user-groups")
-    public ResponseEntity<List<GroupDto>> getAllUserGroups(@RequestParam String userId){
+    public ResponseEntity<List<GroupDto>> getAllUserGroups(
+            @RequestParam String userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "4") int size){
         try {
             log.info("getting all groups for user...");
-            return ResponseEntity.ok(groupService.getAllUserGroups(userId)) ;
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(groupService.getAllUserGroups(userId, pageable)) ;
         }catch (NoGroupFoundException e){
             return ResponseEntity.notFound().build();
         } catch (Error e){

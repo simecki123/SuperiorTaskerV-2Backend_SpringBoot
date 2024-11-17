@@ -209,12 +209,12 @@ public class GroupServiceImpl implements GroupService {
 
 
     @Override
-    public List<GroupDto> getAllUserGroups(String userId) {
+    public List<GroupDto> getAllUserGroups(String userId, Pageable pageable) {
         log.info("Fetching user memberships");
-        List<UserGroupRelation> allUsersGroupMemberships = groupMembershipRepository.findAllByUserId(userId);
+        List<UserGroupRelationDto> allUsersGroupMemberships = userGroupRelationService.getMembershipsByUserId(userId, pageable);
         List<Group> userGroups = new ArrayList<>();
 
-        for(UserGroupRelation userGroupRelation : allUsersGroupMemberships) {
+        for(UserGroupRelationDto userGroupRelation : allUsersGroupMemberships) {
             Group group = groupRepository.findById(userGroupRelation.getGroupId())
                     .orElseThrow(()-> new NoGroupFoundException("There is a relation between user and a group that doesnt exist"));
             userGroups.add(group);

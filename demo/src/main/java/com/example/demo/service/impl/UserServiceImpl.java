@@ -128,6 +128,10 @@ public class UserServiceImpl implements UserService {
             userProfile.setLastName(lastName);
         }
 
+        if(description != null && !description.trim().isEmpty()) {
+            userProfile.setDescription(description);
+        }
+
         userRepository.save(userProfile);
 
         log.info("UserProfile successfully updated");
