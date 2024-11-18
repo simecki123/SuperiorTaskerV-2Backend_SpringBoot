@@ -99,6 +99,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserProfileEditResponse editUserProfile(String firstName, String lastName, String description, MultipartFile photoFile) {
         User userProfile = userRepository.getUserById(Helper.getLoggedInUserId());
+        UserProfileEditResponse response = new UserProfileEditResponse();
 
         if (userProfile == null) {
             throw new IllegalStateException("UserProfile is null");
@@ -135,9 +136,12 @@ public class UserServiceImpl implements UserService {
         userRepository.save(userProfile);
 
         log.info("UserProfile successfully updated");
-        UserProfileEditResponse response = new UserProfileEditResponse();
+
         String url = converterService.convertPhotoUriToUrl(userProfile.getPhotoUri());
-        response.setPhotoUri(url);
+        response.setFirstName(userProfile.getFirstName());
+        response.setLastName(userProfile.getLastName());
+        response.setDescription(userProfile.getDescription());
+        response.setProfileUri(url);
         return response;
     }
 

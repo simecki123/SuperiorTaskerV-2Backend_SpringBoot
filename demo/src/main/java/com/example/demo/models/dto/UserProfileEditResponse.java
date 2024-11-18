@@ -10,8 +10,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserProfileEditResponse {
 
-    @NotBlank
-    private String photoUri;
+    private String firstName;
+    private String lastName;
+    private String description;
+    private String profileUri;
 
 
 }

@@ -75,7 +75,7 @@ public class ConverterServiceImpl implements ConverterService {
         UserProfileEditResponse response = new UserProfileEditResponse();
         // Assuming the photoUri is set somewhere else, possibly after saving the profile
         String url = convertPhotoUriToUrl(userProfileRequest.getPhotoUrl());
-        response.setPhotoUri(url);
+        response.setProfileUri(url);
         return response;
     }
 
