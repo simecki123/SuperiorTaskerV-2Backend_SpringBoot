@@ -33,7 +33,7 @@ public class WebSocketServiceImpl implements WebSocketService {
         log.info("Notifying {} members of the group with a new message", memberships.size());
         for (UserGroupRelation membership : memberships) {
             String userId = membership.getUserId();
-            messagingTemplate.convertAndSend("/profile/" + userId, message);
+            messagingTemplate.convertAndSend("/topic/messages" , message);
         }
     }
 }

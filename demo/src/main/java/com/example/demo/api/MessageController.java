@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -60,29 +61,34 @@ public class MessageController {
         }
     }
 
-    @GetMapping("/get-all-group-messages")
-    public ResponseEntity<List<Message>> getAllGroupMessages(
+    @GetMapping("/get-messages")
+    public ResponseEntity<List<Message>> getMessages(
+            @RequestParam(required = false) String userProfileId,
             @RequestParam(required = false) String groupId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "4") int size
     ) {
-        log.info("Getting all group messages...");
+        log.info("Fetching messages with userProfileId: {} and groupId: {}", userProfileId, groupId);
         try {
             Pageable pageable = PageRequest.of(page, size);
-            List<Message> messageList = messageService.getAllMessages(groupId, pageable);
+            List<Message> messages = messageService.getAllMessages(userProfileId, groupId, pageable);
 
-            if(messageList.isEmpty()) {
-                log.info("No messages found for the group with this Id: {}", groupId);
+            if (messages.isEmpty()) {
+                log.info("No messages found for the provided filters.");
                 return ResponseEntity.ok(Collections.emptyList());
             }
 
-            log.info("Found {} messages", messageList.size());
-            return ResponseEntity.ok(messageList);
+            log.info("Found {} messages.", messages.size());
+            return ResponseEntity.ok(messages);
 
         } catch (NoGroupFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Error e) {
-            return ResponseEntity.badRequest().build();
+            log.error("Group not found: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            log.error("Error fetching messages: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+
 }

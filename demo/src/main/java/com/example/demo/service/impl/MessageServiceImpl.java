@@ -21,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -72,43 +73,33 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public List<Message> getAllMessages(String groupId, Pageable pageable) {
-        groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
-        User user = userProfileRepository.getUserById(Helper.getLoggedInUserId());
+    public List<Message> getAllMessages(String userProfileId, String groupId, Pageable pageable) {
+        Query query = new Query();
 
-        int pageNumber = pageable.getPageNumber();
-        int pageSize = pageable.getPageSize();
+        if (groupId != null) {
+            groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
+            query.addCriteria(Criteria.where("groupId").is(groupId));
+        }
 
+        if (userProfileId != null) {
+            query.addCriteria(Criteria.where("userProfileId").is(userProfileId));
+        }
 
+        query.with(Sort.by(Sort.Direction.DESC, "createdAt"))
+                .skip((long) pageable.getPageNumber() * pageable.getPageSize())
+                .limit(pageable.getPageSize());
 
-        ProjectionOperation projectOperation = Aggregation.project()
-                .andInclude("id", "groupId", "message", "messageStatus", "userProfileId",
-                        "firstName", "lastName", "photoUri", "createdAt", "updatedAt");
+        List<Message> messages = mongoTemplate.find(query, Message.class);
 
-
-        SkipOperation skipOperation = Aggregation.skip((long) pageNumber * pageSize);
-        LimitOperation limitOperation = Aggregation.limit(pageSize);
-
-        SortOperation sortOperation = Aggregation.sort(Sort.by(Sort.Direction.DESC, "createdAt"));
-
-        Aggregation aggregation  = Aggregation.newAggregation(
-                projectOperation,
-                sortOperation,
-                skipOperation,
-                limitOperation
-        );
-
-        AggregationResults<Message> results = mongoTemplate.aggregate(aggregation , "messages", Message.class);
-        List<Message> messages = new ArrayList<>(results.getMappedResults());
-
+        // Convert photo URI to URL if applicable
         messages.forEach(message -> {
             if (message.getPhotoUri() != null) {
                 String convertedUrl = converterService.convertPhotoUriToUrl(message.getPhotoUri());
                 message.setPhotoUri(convertedUrl);
             }
         });
+
         return messages;
-
-
     }
+
 }

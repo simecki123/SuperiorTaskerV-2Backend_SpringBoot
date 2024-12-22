@@ -9,5 +9,5 @@ import java.util.List;
 public interface MessageService {
     MessageResponse createMessage(MessageRequest messageRequest);
     String editMessage(String messageId, MessageStatus messageStatus);
-    List<Message> getAllMessages(String groupId, Pageable pageable);
+    List<Message> getAllMessages(String userProfileId, String groupId, Pageable pageable);
 }
