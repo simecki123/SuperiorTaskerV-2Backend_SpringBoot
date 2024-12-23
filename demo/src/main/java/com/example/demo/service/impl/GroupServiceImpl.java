@@ -73,6 +73,8 @@ public class GroupServiceImpl implements GroupService {
         Group group = new Group();
         group.setName(name);
         group.setDescription(description);
+
+        groupRepository.save(group);
         if (photoFile != null) {
             try {
                 String path = "groupPhotos";
@@ -87,6 +89,7 @@ public class GroupServiceImpl implements GroupService {
                 throw new RuntimeException("Failed to update the group photo", e);
             }
         }
+        // Saving group again because we must save group before creating file S3 and we need to update groupRepository to contain PhotoUri
         groupRepository.save(group);
 
         //? Saving the relation of the profile and group
