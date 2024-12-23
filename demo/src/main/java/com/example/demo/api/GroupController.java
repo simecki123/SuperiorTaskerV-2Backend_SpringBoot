@@ -32,10 +32,13 @@ public class GroupController {
     private final UserGroupRelationService userGroupRelationService;
 
     @PostMapping("/createGroup")
-    public ResponseEntity<GroupResponse> crateGroup(@RequestBody GroupRequest groupRequest) {
+    public ResponseEntity<GroupResponse> crateGroup(
+            @RequestPart(value = "name") String name,
+            @RequestPart(value = "description") String description,
+            @RequestPart(value = "photoUri") MultipartFile photoFile) {
         try {
             log.info("Creating new task...");
-            return ResponseEntity.ok(groupService.createGroup(groupRequest));
+            return ResponseEntity.ok(groupService.createGroup(name, description, photoFile));
         }catch (NoGroupFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (Error e) {

@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface GroupService {
-    GroupResponse createGroup(GroupRequest request);
+    GroupResponse createGroup(String name, String description, MultipartFile photoFile);
     GroupDto getGroupById(String id);
     GroupResponse joinGroup(GroupRequest request);
     List<GroupProjectCountDto> countGroupProjects(String groupId);

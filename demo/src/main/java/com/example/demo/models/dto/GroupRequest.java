@@ -18,7 +18,4 @@ public class GroupRequest {
     @Size(max = 120)
     private String description;
 
-    @NotBlank
-    @Size(max = 120)
-    private String password;
 }

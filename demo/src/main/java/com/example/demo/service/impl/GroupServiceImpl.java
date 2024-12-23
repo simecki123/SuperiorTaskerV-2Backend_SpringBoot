@@ -59,19 +59,34 @@ public class GroupServiceImpl implements GroupService {
 
 
     @Override
-    public GroupResponse createGroup(GroupRequest request) {
-        Optional<Group> groupOptional = groupRepository.findByName(request.getName());
+    public GroupResponse createGroup(String name, String description , MultipartFile photoFile) {
+        Optional<Group> groupOptional = groupRepository.findByName(name);
 
         if(groupOptional.isPresent()) {
             String existingGroupName = groupOptional.get().getName().toLowerCase();
-            String groupNameRequest = request.getName().toLowerCase();
+            String groupNameRequest = name.toLowerCase();
             if (groupNameRequest.equals(existingGroupName)) {
-                throw new GroupAlreadyExistsException("Group name already exists: " + request.getName());
+                throw new GroupAlreadyExistsException("Group name already exists: " + name);
             }
         }
+
         Group group = new Group();
-        group.setName(request.getName());
-        group.setDescription(request.getDescription());
+        group.setName(name);
+        group.setDescription(description);
+        if (photoFile != null) {
+            try {
+                String path = "groupPhotos";
+
+                amazonS3Service.updateFileInS3(path, group.getId(), photoFile.getInputStream());
+
+                group.setPhotoUri(path + "/" + group.getId());
+
+                log.info("Group photo updated successfully");
+            } catch (IOException e) {
+                log.error("Error updating the group photo", e);
+                throw new RuntimeException("Failed to update the group photo", e);
+            }
+        }
         groupRepository.save(group);
 
         //? Saving the relation of the profile and group
@@ -84,8 +99,8 @@ public class GroupServiceImpl implements GroupService {
 
         GroupResponse response = new GroupResponse();
         response.setGroupId(group.getId());
-        response.setName(request.getName());
-        response.setDescription(request.getDescription());
+        response.setName(name);
+        response.setDescription(description);
 
         log.info("Group: ", response);
         log.info("Relation: ", groupMembership);
