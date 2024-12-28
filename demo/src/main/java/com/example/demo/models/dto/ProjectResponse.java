@@ -13,6 +13,7 @@ public class ProjectResponse {
 
     private String id;
     private String name;
+    private String description;
     private String groupId;
     private String userId;
     private LocalDateTime startDate;

@@ -121,6 +121,7 @@ public class ConverterServiceImpl implements ConverterService {
         ProjectResponse response = new ProjectResponse();
         response.setId(project.getId());
         response.setName(project.getName());
+        response.setDescription(project.getDescription());
         response.setGroupId(project.getGroupId());
         response.setUserId(project.getUserId());
         response.setStartDate(project.getStartDate());
