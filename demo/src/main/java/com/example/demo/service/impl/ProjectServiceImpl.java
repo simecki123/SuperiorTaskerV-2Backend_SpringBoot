@@ -92,55 +92,45 @@ public class ProjectServiceImpl implements ProjectService {
                                                 Double startCompletion, Double endCompletion,
                                                 Boolean includeComplete, Boolean includeNotStarted,
                                                 String search, Pageable pageable) {
-
         Criteria criteria = new Criteria();
 
-
-        //handle userId filter
+        // Base filters
         if (userId != null && !userId.isEmpty()) {
             criteria.and("userId").is(userId);
         }
-
-        // Handle groupId filter
         if (groupId != null && !groupId.isEmpty()) {
             criteria.and("groupId").is(groupId);
         }
-
-        // Handle search filter
         if (search != null && !search.isEmpty()) {
             criteria.and("name").regex(search, "i");
         }
 
-        // Handle completion criteria
-        List<Criteria> completionRanges = new ArrayList<>();
+        // Completion filtering
+        List<Criteria> completionCriteria = new ArrayList<>();
 
-        // Check for completed or not started projects first
+        // Handle specific completion states
         if (Boolean.TRUE.equals(includeComplete)) {
-            // Only show 100% complete projects
-            completionRanges.add(Criteria.where("completion").is(100.0));
-        } else if (Boolean.TRUE.equals(includeNotStarted)) {
-            // Only show 0% complete projects
-            completionRanges.add(Criteria.where("completion").is(0.0));
-        } else if (startCompletion != null || endCompletion != null) {
-            // Only apply range filter if neither includeComplete nor includeNotStarted is true
-            if (startCompletion != null && endCompletion != null) {
-                completionRanges.add(Criteria.where("completion").gt(0.0).lt(100.0)
-                        .andOperator(
-                                Criteria.where("completion").gte(startCompletion),
-                                Criteria.where("completion").lte(endCompletion)
-                        ));
-            } else if (startCompletion != null) {
-                completionRanges.add(Criteria.where("completion").gt(0.0).lt(100.0)
-                        .and("completion").gte(startCompletion));
-            } else {
-                completionRanges.add(Criteria.where("completion").gt(0.0).lt(100.0)
-                        .and("completion").lte(endCompletion));
-            }
+            completionCriteria.add(Criteria.where("completion").is(100.0));
+        }
+        if (Boolean.TRUE.equals(includeNotStarted)) {
+            completionCriteria.add(Criteria.where("completion").is(0.0));
         }
 
-        // Add completion criteria if any exists
-        if (!completionRanges.isEmpty()) {
-            criteria.orOperator(completionRanges.toArray(new Criteria[0]));
+        // Handle completion range
+        if (startCompletion != null || endCompletion != null) {
+            Criteria rangeCriteria = Criteria.where("completion");
+            if (startCompletion != null) {
+                rangeCriteria.gte(startCompletion);
+            }
+            if (endCompletion != null) {
+                rangeCriteria.lte(endCompletion);
+            }
+            completionCriteria.add(rangeCriteria);
+        }
+
+        // If any completion criteria exist, combine them with OR
+        if (!completionCriteria.isEmpty()) {
+            criteria.orOperator(completionCriteria.toArray(new Criteria[0]));
         }
 
         MatchOperation matchOperation = Aggregation.match(criteria);

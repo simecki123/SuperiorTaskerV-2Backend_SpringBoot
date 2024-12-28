@@ -41,16 +41,19 @@ public class ProjectController {
     public ResponseEntity<List<ProjectResponse>> getFilteredProjects(
             @RequestParam(required = false) String userId,
             @RequestParam(required = false) String groupId,
-            @RequestParam(required = false) Double startCompletion,  // Changed to Double object
-            @RequestParam(required = false) Double endCompletion,    // Added end range
-            @RequestParam(required = false) Boolean includeComplete, // Option to include 100% complete
-            @RequestParam(required = false) Boolean includeNotStarted, // Option to include 0%
+            @RequestParam(defaultValue = "0") Double startCompletion,  // Changed to Double object
+            @RequestParam(defaultValue = "100") Double endCompletion,    // Added end range
+            @RequestParam(defaultValue = "false") Boolean includeComplete, // Option to include 100% complete
+            @RequestParam(defaultValue = "false") Boolean includeNotStarted, // Option to include 0%
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "4") int size
     ) {
         log.info("Received request with userId: {}", userId);
         try {
+            if (startCompletion > endCompletion) {
+                return ResponseEntity.badRequest().build();
+            }
             Pageable pageable = PageRequest.of(page, size);
             List<ProjectResponse> projects = projectService.getAllProjects(
                     userId, groupId, startCompletion, endCompletion,
