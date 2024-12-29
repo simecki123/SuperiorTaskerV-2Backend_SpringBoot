@@ -64,6 +64,20 @@ public class GroupController {
         }
     }
 
+    @GetMapping("/get-group-by-id")
+    public ResponseEntity<GroupDto> getGroupById(
+            @RequestParam String groupId
+    ) {
+        try{
+            log.info("getting group by its id");
+            return ResponseEntity.ok(groupService.getGroupById(groupId));
+        } catch (NoGroupFoundException e) {
+            return ResponseEntity.notFound().build();
+        }catch(Error e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @GetMapping("/get-all-group-members")
     public ResponseEntity<List<GroupMemberResponse>> getAllGroupUsers(
             @RequestParam String groupId,

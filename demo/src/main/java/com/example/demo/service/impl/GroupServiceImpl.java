@@ -114,7 +114,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public GroupDto getGroupById(String id) {
-        Group group = groupRepository.findById(id).orElseThrow(() -> new NotFoundException("No group associated with that id"));
+        Group group = groupRepository.findById(id).orElseThrow(() -> new NoGroupFoundException("No group associated with that id"));
 
         log.info("Get group by id finished");
         return converterService.convertToGroupDto(group);
@@ -221,7 +221,9 @@ public class GroupServiceImpl implements GroupService {
 
         log.info("Group info successfully edited");
         GroupEditResponse response = new GroupEditResponse();
-        response.setPhotoUrl(converterService.convertPhotoUriToUrl(group.getPhotoUri()));
+        response.setName(group.getName());
+        response.setDescription(group.getDescription());
+        response.setPhotoUri(converterService.convertPhotoUriToUrl(group.getPhotoUri()));
         return response;
     }
 

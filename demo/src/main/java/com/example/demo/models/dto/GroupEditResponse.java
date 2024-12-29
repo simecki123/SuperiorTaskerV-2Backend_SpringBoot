@@ -8,5 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GroupEditResponse {
-    private String photoUrl;
+    private String name;
+    private String description;
+    private String photoUri;
 }
