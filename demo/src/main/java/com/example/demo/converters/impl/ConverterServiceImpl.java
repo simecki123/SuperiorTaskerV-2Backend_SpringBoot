@@ -65,6 +65,7 @@ public class ConverterServiceImpl implements ConverterService {
         response.setUserId(user.getId());
         response.setFirstName(user.getFirstName());
         response.setLastName(user.getLastName());
+        response.setDescription(user.getDescription());
         response.setRole(role);
         response.setPhotoUrl(convertPhotoUriToUrl(user.getPhotoUri()));
         return response;
@@ -79,7 +80,16 @@ public class ConverterServiceImpl implements ConverterService {
         return response;
     }
 
-
+    @Override
+    public UserToAddInGroupResponse convertUserToUserToAddInGroupResponse(User user) {
+        UserToAddInGroupResponse response = new UserToAddInGroupResponse();
+        response.setUserId(user.getId());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+        response.setDescription(user.getDescription());
+        response.setPhotoUrl(user.getPhotoUri());
+        return response;
+    }
 
 
     @Override

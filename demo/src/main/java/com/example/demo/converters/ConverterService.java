@@ -11,6 +11,7 @@ public interface ConverterService {
     GroupDto convertToGroupDto(Group group);
     GroupMemberResponse convertToGroupMemberResponse(GroupMemberDto groupMemberDto);
     UserProfileEditResponse convertToUserProfileResponse(UserProfileRequest userProfileRequest);
+    UserToAddInGroupResponse convertUserToUserToAddInGroupResponse(User user);
     GroupMemberResponse convertUserToGroupMemberResponse(User user, Role role);
     MessageResponse convertToMessageResponse(Message message);
     UserGroupRelationDto convertToUserGroupRelation(UserGroupRelation userGroupRelation);

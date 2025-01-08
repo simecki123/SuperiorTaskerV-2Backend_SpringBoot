@@ -1,21 +1,27 @@
 package com.example.demo.service.impl;
 
 import com.amazonaws.services.kms.model.NotFoundException;
+import com.example.demo.exceptions.NoGroupFoundException;
 import com.example.demo.exceptions.UnauthorizedException;
+import com.example.demo.models.dao.Group;
+import com.example.demo.models.dao.Task;
 import com.example.demo.models.dao.User;
+import com.example.demo.models.dao.UserGroupRelation;
+import com.example.demo.models.dto.*;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.UserGroupRelationRepository;
 import com.example.demo.security.utils.Helper;
 import com.example.demo.service.AmazonS3Service;
+import com.example.demo.service.UserGroupRelationService;
 import com.example.demo.service.UserService;
 import com.example.demo.converters.ConverterService;
-import com.example.demo.models.dto.UserDto;
-import com.example.demo.models.dto.UserProfileEditResponse;
-import com.example.demo.models.dto.UserProfileRequest;
-import com.example.demo.models.dto.UserProfileResponse;
 import com.example.demo.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.aggregation.*;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +29,10 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -145,6 +154,88 @@ public class UserServiceImpl implements UserService {
         return response;
     }
 
+    @Override
+    public List<UserToAddInGroupResponse> fetchUserByNameAndNotHisGroup(String groupId, String search, Pageable pageable) {
+        groupRepository.findById(groupId)
+                .orElseThrow(() -> new NoGroupFoundException("No group found with ID: " + groupId));
+
+        Criteria searchCriteria = new Criteria();
+        if (search != null && !search.isEmpty()) {
+            String[] searchTerms = search.trim().split("\\s+");
+
+            if (searchTerms.length == 1) {
+                searchCriteria.orOperator(
+                        Criteria.where("firstName").regex(searchTerms[0], "i"),
+                        Criteria.where("lastName").regex(searchTerms[0], "i")
+                );
+            } else {
+                List<Criteria> possibleMatches = new ArrayList<>();
+
+                possibleMatches.add(
+                        new Criteria().andOperator(
+                                Criteria.where("firstName").regex(searchTerms[0], "i"),
+                                Criteria.where("lastName").regex(searchTerms[searchTerms.length - 1], "i")
+                        )
+                );
+
+                possibleMatches.add(
+                        new Criteria().andOperator(
+                                Criteria.where("lastName").regex(searchTerms[0], "i"),
+                                Criteria.where("firstName").regex(searchTerms[searchTerms.length - 1], "i")
+                        )
+                );
+
+                for (String term : searchTerms) {
+                    possibleMatches.add(
+                            new Criteria().orOperator(
+                                    Criteria.where("firstName").regex(term, "i"),
+                                    Criteria.where("lastName").regex(term, "i")
+                            )
+                    );
+                }
+
+                searchCriteria.orOperator(possibleMatches.toArray(new Criteria[0]));
+            }
+        }
+
+        List<String> existingUserIds = groupMembershipRepository
+                .findAllByGroupId(groupId)
+                .stream()
+                .map(UserGroupRelation::getUserId)
+                .collect(Collectors.toList());
+
+        Criteria notInGroupCriteria = Criteria.where("_id").nin(existingUserIds);
+
+        Criteria finalCriteria = new Criteria().andOperator(
+                searchCriteria,
+                notInGroupCriteria
+        );
+
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(finalCriteria),
+                Aggregation.project()
+                        .and("_id").as("id")
+                        .and("firstName").as("firstName")
+                        .and("lastName").as("lastName")
+                        .and("email").as("email")
+                        .and("photoUri").as("photoUri")
+                        .and("description").as("description"),
+                Aggregation.sort(Sort.by(Sort.Direction.DESC, "createdAt")),
+                Aggregation.skip((long) pageable.getPageNumber() * pageable.getPageSize()),
+                Aggregation.limit(pageable.getPageSize())
+        );
+
+        AggregationResults<User> results = mongoTemplate.aggregate(
+                aggregation,
+                "users",
+                User.class
+        );
+
+        return results.getMappedResults()
+                .stream()
+                .map(converterService::convertUserToUserToAddInGroupResponse)
+                .collect(Collectors.toList());
+    }
 
 
 }

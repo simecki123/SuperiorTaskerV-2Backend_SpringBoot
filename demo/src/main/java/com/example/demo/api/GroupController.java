@@ -152,6 +152,25 @@ public class GroupController {
         }
     }
 
+    @PostMapping("/add-users-to-group")
+    public ResponseEntity<List<UserGroupRelationResponse>> addUsersToGroup(
+            @RequestBody List<UserToAddInGroupResponse> users,
+            @RequestParam String groupId
+    ) {
+        if (!authService.hasRole(groupId, Role.ADMIN)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            log.info("Creating multiple user group relations...");
+            return ResponseEntity.ok(userGroupRelationService.createMultipleUserGroupRelations(users, groupId));
+        } catch (NoGroupFoundException | NoUserFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Error | UserGroupRelationAlreadyExistsException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @DeleteMapping("/leave-group")
     public ResponseEntity<String> leaveGroup(
             @RequestParam String userId,

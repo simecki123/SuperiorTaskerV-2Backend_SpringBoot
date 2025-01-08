@@ -1,12 +1,11 @@
 package com.example.demo.service;
 
-import com.example.demo.models.dto.UserDto;
-import com.example.demo.models.dto.UserProfileEditResponse;
-import com.example.demo.models.dto.UserProfileRequest;
-import com.example.demo.models.dto.UserProfileResponse;
+import com.example.demo.models.dto.*;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 public interface UserService {
     //user
@@ -18,6 +17,7 @@ public interface UserService {
 
     byte[] downloadUserProfilePhoto() throws IOException;
     UserProfileEditResponse editUserProfile(String firstName, String lastName, String description, MultipartFile photoFile);
+    List<UserToAddInGroupResponse> fetchUserByNameAndNotHisGroup(String groupId, String search, Pageable pageable);
     void updateFcmToken(String token);
 
 

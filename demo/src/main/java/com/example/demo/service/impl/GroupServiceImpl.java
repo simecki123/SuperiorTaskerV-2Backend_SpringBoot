@@ -260,14 +260,17 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public List<GroupMemberResponse> getGroupMembers(String groupId, Pageable pageable) {
         groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
+        User userProfile = userRepository.getUserById(Helper.getLoggedInUserId());
         List<UserGroupRelationDto> userGroupRelationResponses = userGroupRelationService.getMembershipsByGroupId(groupId,pageable);
         List<GroupMemberResponse> groupUsers = new ArrayList<>();
         for (UserGroupRelationDto userGroupRelationResponse : userGroupRelationResponses) {
              User user = userRepository.findById(userGroupRelationResponse
                      .getUserId())
                      .orElseThrow(()->  new NoUserFoundException("Trying to fetch a user that doesn't exist"));
+            if(!user.getId().equals(userProfile.getId())) {
+                groupUsers.add(converterService.convertUserToGroupMemberResponse(user, userGroupRelationResponse.getUserRole()));
+            }
 
-             groupUsers.add(converterService.convertUserToGroupMemberResponse(user, userGroupRelationResponse.getUserRole()));
 
         }
 

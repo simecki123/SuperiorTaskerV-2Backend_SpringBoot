@@ -5,10 +5,7 @@ import com.example.demo.exceptions.*;
 import com.example.demo.models.dao.Task;
 import com.example.demo.models.dao.User;
 import com.example.demo.models.dao.UserGroupRelation;
-import com.example.demo.models.dto.UserDto;
-import com.example.demo.models.dto.UserGroupRelationDto;
-import com.example.demo.models.dto.UserGroupRelationRequest;
-import com.example.demo.models.dto.UserGroupRelationResponse;
+import com.example.demo.models.dto.*;
 
 import com.example.demo.models.enums.Role;
 import com.example.demo.repository.GroupRepository;
@@ -27,6 +24,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -139,6 +137,51 @@ public class UserGroupRelationServiceImpl implements UserGroupRelationService {
         return userGroupRelationResponse;
 
     }
+
+    @Override
+    public List<UserGroupRelationResponse> createMultipleUserGroupRelations(List<UserToAddInGroupResponse> users, String groupId) throws UserGroupRelationAlreadyExistsException {
+        log.info("Searching for a valid group using id taht was given");
+        groupRepository.findById(groupId)
+                .orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
+
+        log.info("Group found...");
+        List<UserGroupRelationResponse> responses = new ArrayList<>();
+
+        for (UserToAddInGroupResponse user : users) {
+            log.info("Veryfing taht user we want to add exists");
+            userRepository.findById(user.getUserId())
+                    .orElseThrow(() -> new NoUserFoundException("User doesn't exist..."));
+
+            log.info("Checking if user is already part of this group");
+            UserGroupRelation existingRelation =
+                    userGroupRelationRepository.findByUserIdAndGroupId(user.getUserId(), groupId);
+
+            if (existingRelation != null) {
+                log.info("User is already part of that group");
+                throw new UserGroupRelationAlreadyExistsException(
+                        "User " + user.getUserId() + " is already a member of this group"
+                );
+            }
+            log.info("User is not a part of this group lets make him...");
+            UserGroupRelation newRelation = new UserGroupRelation();
+            newRelation.setGroupId(groupId);
+            newRelation.setUserId(user.getUserId());
+            newRelation.setRole(Role.USER);
+
+            userGroupRelationRepository.save(newRelation);
+
+            UserGroupRelationResponse response = new UserGroupRelationResponse();
+            response.setId(newRelation.getId());
+            response.setGroupId(newRelation.getGroupId());
+            response.setUserId(newRelation.getUserId());
+            response.setRole(newRelation.getRole());
+
+            responses.add(response);
+        }
+
+        return responses;
+    }
+
 
     @Override
     public String leaveGroup(String userId, String groupId) throws NoUserGroupRelation {
