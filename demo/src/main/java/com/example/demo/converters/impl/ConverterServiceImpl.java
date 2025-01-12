@@ -114,19 +114,6 @@ public class ConverterServiceImpl implements ConverterService {
     }
 
     @Override
-    public List<UserGroupRelationDto> convertToUserGroupRelation(List<UserGroupRelation> userGroupRelationList) {
-        List<UserGroupRelationDto> userGroupRelationDtos = new ArrayList<>();
-        for(UserGroupRelation userGroupRelation : userGroupRelationList) {
-            UserGroupRelationDto userGroupRelationDto = new UserGroupRelationDto();
-            userGroupRelationDto.setUserId(userGroupRelation.getUserId());
-            userGroupRelationDto.setGroupId(userGroupRelation.getGroupId());
-            userGroupRelationDto.setUserRole(userGroupRelation.getRole());
-        }
-
-        return userGroupRelationDtos;
-    }
-
-    @Override
     public ProjectResponse convertToUserProjectDto(Project project) {
         ProjectResponse response = new ProjectResponse();
         response.setId(project.getId());

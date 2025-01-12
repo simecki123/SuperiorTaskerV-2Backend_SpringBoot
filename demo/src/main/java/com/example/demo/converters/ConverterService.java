@@ -15,7 +15,6 @@ public interface ConverterService {
     GroupMemberResponse convertUserToGroupMemberResponse(User user, Role role);
     MessageResponse convertToMessageResponse(Message message);
     UserGroupRelationDto convertToUserGroupRelation(UserGroupRelation userGroupRelation);
-    List<UserGroupRelationDto> convertToUserGroupRelation(List<UserGroupRelation> userGroupRelationList);
     ProjectResponse convertToUserProjectDto(Project project);
     TaskResponse convertToUserTaskDto(Task task);
     String convertPhotoUriToUrl(String photoUri);

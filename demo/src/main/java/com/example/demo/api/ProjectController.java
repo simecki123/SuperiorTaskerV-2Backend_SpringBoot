@@ -25,7 +25,7 @@ public class ProjectController {
     private final ProjectService projectService;
 
     @PostMapping("/createProject")
-    public ResponseEntity<ProjectResponse> crateGroup(@RequestBody ProjectRequest projectRequest) {
+    public ResponseEntity<ProjectResponse> crateProject(@RequestBody ProjectRequest projectRequest) {
         try {
             log.info("Creating new project...");
             return ResponseEntity.ok(projectService.createProject(projectRequest));
