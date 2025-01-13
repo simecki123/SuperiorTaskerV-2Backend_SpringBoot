@@ -5,6 +5,8 @@ import com.example.demo.exceptions.NoProjectFoundException;
 import com.example.demo.exceptions.NoTaskFoundException;
 import com.example.demo.models.dto.TaskRequest;
 import com.example.demo.models.dto.TaskResponse;
+import com.example.demo.models.dto.UserProjectRelationRequest;
+import com.example.demo.models.dto.UserProjectResponse;
 import com.example.demo.models.enums.TaskStatus;
 import com.example.demo.service.TaskService;
 import com.example.demo.config.openapi.ShowAPI;
@@ -90,6 +92,18 @@ public class TaskController {
         } catch (NoTaskFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/get-user-projectRelation")
+    public ResponseEntity<List<UserProjectResponse>> getUserProjectRelations(
+            @RequestBody List<UserProjectRelationRequest> userProjectRelationRequests) {
+        try {
+            log.info("Fetching user projectRelations");
+            return ResponseEntity.ok(taskService.fetchUserProjectRelations(userProjectRelationRequests));
+        } catch (Exception e) {
+            log.error("Error fetching user project relations", e);
             return ResponseEntity.badRequest().build();
         }
     }

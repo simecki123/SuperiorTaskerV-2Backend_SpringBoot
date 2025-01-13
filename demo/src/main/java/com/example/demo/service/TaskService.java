@@ -2,6 +2,8 @@ package com.example.demo.service;
 
 import com.example.demo.models.dto.TaskRequest;
 import com.example.demo.models.dto.TaskResponse;
+import com.example.demo.models.dto.UserProjectRelationRequest;
+import com.example.demo.models.dto.UserProjectResponse;
 import com.example.demo.models.enums.TaskStatus;
 import org.springframework.data.domain.Pageable;
 
@@ -13,10 +15,10 @@ public interface TaskService {
 
     List<TaskResponse> getAllTasksForUser(String userId, String groupId, String projectId, TaskStatus taskStatus, String search, Pageable pageable );
 
-    List<TaskResponse> getAllTasksByProjectId(String projectId);
     String updateTaskStatus(String id, TaskStatus taskStatus);
 
     String deleteTaskById(String taskId);
+    List<UserProjectResponse> fetchUserProjectRelations(List<UserProjectRelationRequest> userProjectRelationRequests);
 
 
 

@@ -14,4 +14,6 @@ public interface TaskRepository extends MongoRepository<Task, String> {
     List<Task> findAllByProjectId(String projectId);
     List<Task> findAllByGroupId(String taskId);
     List<Task> findAllByUserId(String userId);
+    Task findFirstByUserIdAndProjectIdAndGroupId(String userId, String projectId, String groupId);
+    Task findFirstByUserIdAndProjectId(String userId, String projectId);
 }

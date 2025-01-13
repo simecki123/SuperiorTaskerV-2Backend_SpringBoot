@@ -8,6 +8,8 @@ import com.example.demo.models.dao.Project;
 import com.example.demo.models.dao.Task;
 import com.example.demo.models.dto.TaskRequest;
 import com.example.demo.models.dto.TaskResponse;
+import com.example.demo.models.dto.UserProjectRelationRequest;
+import com.example.demo.models.dto.UserProjectResponse;
 import com.example.demo.models.enums.TaskStatus;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.ProjectRepository;
@@ -26,7 +28,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,7 +43,7 @@ public class TaskServiceImpl implements TaskService {
     private final ProjectRepository projectRepository;
     private final GroupRepository groupRepository;
     private final ConverterService converterService;
-    private final ProjectService projectService;
+    private final ProjectCommonServiceImpl projectCommonService;
     private final MongoTemplate mongoTemplate;
 
     @Override
@@ -62,7 +66,7 @@ public class TaskServiceImpl implements TaskService {
 
         taskRepository.save(task);
         log.info("Updating completion of the project...");
-        projectService.updateProjectCompletion(task.getProjectId());
+        projectCommonService.updateProjectCompletion(task.getProjectId());
 
         log.info("Task created");
         return converterService.convertToUserTaskDto(task);
@@ -134,27 +138,12 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public List<TaskResponse> getAllTasksByProjectId(String projectId) {
-        Project project = projectRepository.findById(projectId).orElseThrow(() -> new NoProjectFoundException("There is no project with thatId") );
-        log.info("Searching for tasks with specific project id...");
-
-        List<Task> taskList = taskRepository.findAllByProjectId(projectId);
-        return taskList.stream()
-                .map(converterService::convertToUserTaskDto)
-                .collect(Collectors.toList());
-
-
-
-    }
-
-
-    @Override
     public String updateTaskStatus(String id, TaskStatus taskStatus) {
         Task task = taskRepository.getById(id).orElseThrow(() -> new NoTaskFoundException("There is no task with that id, so it cannot be updated!"));
         task.setStatus(taskStatus);
         taskRepository.save(task);
         log.info("Updating completion of the project...");
-        projectService.updateProjectCompletion(task.getProjectId());
+        projectCommonService.updateProjectCompletion(task.getProjectId());
         return "Task status is successfully updated...";
     }
 
@@ -163,8 +152,47 @@ public class TaskServiceImpl implements TaskService {
         Task task = taskRepository.getById(taskId).orElseThrow(() -> new NoTaskFoundException("There is no task with that id, so it cannot be updated!"));
         taskRepository.delete(task);
         log.info("Updating completion of the project...");
-        projectService.updateProjectCompletion(task.getProjectId());
+        projectCommonService.updateProjectCompletion(task.getProjectId());
         return "Task is successfully deleted...";
+    }
+
+    @Override
+    public List<UserProjectResponse> fetchUserProjectRelations(List<UserProjectRelationRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            log.info("No requests provided for user-project relations");
+            return Collections.emptyList();
+        }
+
+        log.info("Fetching user-project relations for {} requests", requests.size());
+
+        List<UserProjectResponse> responses = requests.stream()
+                .map(request -> {
+                    log.debug("Processing request for userId: {}, projectId: {}, groupId: {}",
+                            request.getUserId(), request.getProjectId(), request.getGroupId());
+
+                    Task task = request.getGroupId() != null && !request.getGroupId().isEmpty() ?
+                            taskRepository.findFirstByUserIdAndProjectIdAndGroupId(
+                                    request.getUserId(),
+                                    request.getProjectId(),
+                                    request.getGroupId()
+                            ) :
+                            taskRepository.findFirstByUserIdAndProjectId(
+                                    request.getUserId(),
+                                    request.getProjectId()
+                            );
+
+                    return task != null ?
+                            new UserProjectResponse(
+                                    task.getUserId(),
+                                    task.getProjectId(),
+                                    task.getGroupId()
+                            ) : null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        log.info("Found {} user-project relations", responses.size());
+        return responses;
     }
 
 

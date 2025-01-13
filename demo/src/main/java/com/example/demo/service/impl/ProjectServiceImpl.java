@@ -6,14 +6,13 @@ import com.example.demo.exceptions.NoProjectFoundException;
 import com.example.demo.models.dao.Group;
 import com.example.demo.models.dao.Project;
 import com.example.demo.models.dao.Task;
-import com.example.demo.models.dto.ProjectRequest;
-import com.example.demo.models.dto.ProjectResponse;
-import com.example.demo.models.dto.TaskResponse;
+import com.example.demo.models.dto.*;
 import com.example.demo.models.enums.TaskStatus;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.ProjectRepository;
 import com.example.demo.repository.TaskRepository;
 import com.example.demo.service.ProjectService;
+import com.example.demo.service.TaskService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,6 +36,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository projectRepository;
     private final ConverterService converterService;
+    private final TaskService taskService;
     private final MongoTemplate mongoTemplate;
     private final TaskRepository taskRepository;
     private final GroupRepository groupRepository;
@@ -45,7 +46,6 @@ public class ProjectServiceImpl implements ProjectService {
         groupRepository.findById(request.getGroupId()).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
 
         Project project = new Project();
-        project.setUserId(request.getUserid());
         project.setGroupId(request.getGroupId());
         project.setName(request.getName());
         project.setDescription(request.getDescription());
@@ -60,33 +60,6 @@ public class ProjectServiceImpl implements ProjectService {
 
     }
 
-
-
-    @Override
-    public void updateProjectCompletion(String id) {
-
-        Project project = projectRepository.findById(id).orElseThrow(() -> new NoProjectFoundException("No project with associated id"));
-        log.info("Fetching project ");
-
-        List<Task> taskList = taskRepository.findAllByProjectId(id);
-        log.info("returning task list ");
-        double completionSum = 0.00;
-        for(Task task : taskList) {
-            if(task.getStatus().equals(TaskStatus.COMPLETED)){
-                completionSum +=1;
-            }
-        }
-
-        double completion = round((completionSum / taskList.size()) * 100);
-
-
-        project.setCompletion(completion);
-
-        projectRepository.save(project);
-
-
-    }
-
     @Override
     public List<ProjectResponse> getAllProjects(String userId, String groupId,
                                                 Double startCompletion, Double endCompletion,
@@ -94,10 +67,7 @@ public class ProjectServiceImpl implements ProjectService {
                                                 String search, Pageable pageable) {
         Criteria criteria = new Criteria();
 
-        // Base filters
-        if (userId != null && !userId.isEmpty()) {
-            criteria.and("userId").is(userId);
-        }
+        // Remove userId from criteria since it's now handled through tasks
         if (groupId != null && !groupId.isEmpty()) {
             criteria.and("groupId").is(groupId);
         }
@@ -108,7 +78,6 @@ public class ProjectServiceImpl implements ProjectService {
         // Completion filtering
         List<Criteria> completionCriteria = new ArrayList<>();
 
-        // Handle specific completion states
         if (Boolean.TRUE.equals(includeComplete)) {
             completionCriteria.add(Criteria.where("completion").is(100.0));
         }
@@ -116,7 +85,6 @@ public class ProjectServiceImpl implements ProjectService {
             completionCriteria.add(Criteria.where("completion").is(0.0));
         }
 
-        // Handle completion range
         if (startCompletion != null || endCompletion != null) {
             Criteria rangeCriteria = Criteria.where("completion");
             if (startCompletion != null) {
@@ -128,16 +96,13 @@ public class ProjectServiceImpl implements ProjectService {
             completionCriteria.add(rangeCriteria);
         }
 
-        // If any completion criteria exist, combine them with OR
         if (!completionCriteria.isEmpty()) {
             criteria.orOperator(completionCriteria.toArray(new Criteria[0]));
         }
 
         MatchOperation matchOperation = Aggregation.match(criteria);
-
         ProjectionOperation taskOperation = Aggregation.project()
                 .and("id").as("projectId")
-                .and("userId").as("userId")
                 .and("groupId").as("groupId")
                 .and("name").as("name")
                 .and("description").as("description")
@@ -160,6 +125,25 @@ public class ProjectServiceImpl implements ProjectService {
         AggregationResults<Project> results = mongoTemplate.aggregate(aggregation, "projects", Project.class);
         log.info("Found {} results", results.getMappedResults().size());
 
+        // If userId is provided, filter projects based on task relationship
+        if (userId != null && !userId.isEmpty()) {
+            return results.getMappedResults().stream()
+                    .filter(project -> {
+                        // Check if user has any task in this project
+                        UserProjectRelationRequest request = new UserProjectRelationRequest();
+                        request.setUserId(userId);
+                        request.setProjectId(project.getId());
+                        request.setGroupId(project.getGroupId());
+
+                        List<UserProjectResponse> response = taskService.fetchUserProjectRelations(
+                                Collections.singletonList(request));
+                        return !response.isEmpty();
+                    })
+                    .map(converterService::convertToUserProjectDto)
+                    .collect(Collectors.toList());
+        }
+
+        // If no userId provided, return all projects
         return results.getMappedResults()
                 .stream()
                 .map(converterService::convertToUserProjectDto)
@@ -200,15 +184,6 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
 
-
-    // helper method to round completion decimal to 2 decimal points...
-    private double round(double value) {
-
-        long factor = (long) Math.pow(10, 2);
-        value = value * factor;
-        long tmp = Math.round(value);
-        return (double) tmp / factor;
-    }
 
 
 }

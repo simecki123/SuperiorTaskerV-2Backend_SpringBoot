@@ -9,8 +9,6 @@ import java.util.List;
 public interface ProjectService {
     ProjectResponse createProject(ProjectRequest request);
 
-    void updateProjectCompletion(String id);
-
     List<ProjectResponse> getAllProjects(String userId, String groupId,
                                          Double startCompletion, Double endCompletion,
                                          Boolean includeComplete, Boolean includeNotStarted,
