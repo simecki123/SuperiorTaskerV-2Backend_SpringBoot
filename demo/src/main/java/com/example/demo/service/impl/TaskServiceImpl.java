@@ -183,8 +183,8 @@ public class TaskServiceImpl implements TaskService {
 
                     return task != null ?
                             new UserProjectResponse(
-                                    task.getUserId(),
                                     task.getProjectId(),
+                                    task.getUserId(),
                                     task.getGroupId()
                             ) : null;
                 })
