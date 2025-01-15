@@ -73,7 +73,7 @@ public class ProjectController {
     }
 
     @DeleteMapping("/delete-project")
-    public ResponseEntity<String> deleteProject(@RequestParam String projectId) {
+    public ResponseEntity<DeleteProjectResponse> deleteProject(@RequestParam String projectId) {
         try {
 
             log.info("Deleting project by his id...");

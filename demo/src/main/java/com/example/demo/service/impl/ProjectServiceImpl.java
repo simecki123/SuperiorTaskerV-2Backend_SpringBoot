@@ -151,13 +151,23 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public String deleteProjectById(String projectId) {
-        Project project = projectRepository.findById(projectId).orElseThrow(() -> new NoProjectFoundException("There is no project with that id present..."));
-        projectRepository.delete(project);
-        deleteProjectTasks(projectId);
+    public DeleteProjectResponse deleteProjectById(String projectId) {
+        try {
+            Project project = projectRepository.findById(projectId).orElseThrow(() -> new NoProjectFoundException("There is no project with that id present..."));
+            projectRepository.delete(project);
+            deleteProjectTasks(projectId);
+            DeleteProjectResponse deleteProjectResponse = new DeleteProjectResponse(true, "Project and his tasks deleted successfully...");
 
-        log.info("Project is deleted as well as his tasks...");
-        return "Project and his tasks deleted successfully...";
+            log.info("Project is deleted as well as his tasks...");
+            return deleteProjectResponse;
+            
+        } catch (NoProjectFoundException e) {
+            log.error("Project not found: {}", projectId);
+            throw e;
+        } catch (Exception e) {
+            log.error("Error deleting project {}: {}", projectId, e.getMessage());
+            throw new RuntimeException("Failed to delete project: " + e.getMessage());
+        }
 
 
     }
