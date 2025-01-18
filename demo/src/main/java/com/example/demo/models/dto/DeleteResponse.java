@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class DeleteProjectResponse {
+public class DeleteResponse {
     private boolean success;
     private String message;
 }

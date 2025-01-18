@@ -3,10 +3,7 @@ package com.example.demo.api;
 import com.example.demo.exceptions.NoGroupFoundException;
 import com.example.demo.exceptions.NoProjectFoundException;
 import com.example.demo.exceptions.NoTaskFoundException;
-import com.example.demo.models.dto.TaskRequest;
-import com.example.demo.models.dto.TaskResponse;
-import com.example.demo.models.dto.UserProjectRelationRequest;
-import com.example.demo.models.dto.UserProjectResponse;
+import com.example.demo.models.dto.*;
 import com.example.demo.models.enums.TaskStatus;
 import com.example.demo.service.TaskService;
 import com.example.demo.config.openapi.ShowAPI;
@@ -85,7 +82,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/delete-task")
-    public ResponseEntity<String> deleteTask(@RequestParam String taskId) {
+    public ResponseEntity<DeleteResponse> deleteTask(@RequestParam String taskId) {
         try {
             log.info("Deleting task...");
             return ResponseEntity.ok(taskService.deleteTaskById(taskId));

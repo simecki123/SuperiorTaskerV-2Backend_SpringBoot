@@ -7,7 +7,6 @@ import com.example.demo.models.dao.Group;
 import com.example.demo.models.dao.Project;
 import com.example.demo.models.dao.Task;
 import com.example.demo.models.dto.*;
-import com.example.demo.models.enums.TaskStatus;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.ProjectRepository;
 import com.example.demo.repository.TaskRepository;
@@ -151,12 +150,12 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public DeleteProjectResponse deleteProjectById(String projectId) {
+    public DeleteResponse deleteProjectById(String projectId) {
         try {
             Project project = projectRepository.findById(projectId).orElseThrow(() -> new NoProjectFoundException("There is no project with that id present..."));
             projectRepository.delete(project);
             deleteProjectTasks(projectId);
-            DeleteProjectResponse deleteProjectResponse = new DeleteProjectResponse(true, "Project and his tasks deleted successfully...");
+            DeleteResponse deleteProjectResponse = new DeleteResponse(true, "Project and his tasks deleted successfully...");
 
             log.info("Project is deleted as well as his tasks...");
             return deleteProjectResponse;

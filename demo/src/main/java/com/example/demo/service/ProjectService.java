@@ -1,6 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.models.dto.DeleteProjectResponse;
+import com.example.demo.models.dto.DeleteResponse;
 import com.example.demo.models.dto.ProjectRequest;
 import com.example.demo.models.dto.ProjectResponse;
 import org.springframework.data.domain.Pageable;
@@ -15,7 +15,7 @@ public interface ProjectService {
                                          Boolean includeComplete, Boolean includeNotStarted,
                                          String search, Pageable pageable);
 
-    DeleteProjectResponse deleteProjectById(String projectId);
+    DeleteResponse deleteProjectById(String projectId);
     String deleteProjectByGroupId(String groupId);
 
 }

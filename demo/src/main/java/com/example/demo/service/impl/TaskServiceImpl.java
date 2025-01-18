@@ -6,10 +6,7 @@ import com.example.demo.exceptions.NoProjectFoundException;
 import com.example.demo.exceptions.NoTaskFoundException;
 import com.example.demo.models.dao.Project;
 import com.example.demo.models.dao.Task;
-import com.example.demo.models.dto.TaskRequest;
-import com.example.demo.models.dto.TaskResponse;
-import com.example.demo.models.dto.UserProjectRelationRequest;
-import com.example.demo.models.dto.UserProjectResponse;
+import com.example.demo.models.dto.*;
 import com.example.demo.models.enums.TaskStatus;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.ProjectRepository;
@@ -148,12 +145,24 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public String deleteTaskById(String taskId) {
-        Task task = taskRepository.getById(taskId).orElseThrow(() -> new NoTaskFoundException("There is no task with that id, so it cannot be updated!"));
-        taskRepository.delete(task);
-        log.info("Updating completion of the project...");
-        projectCommonService.updateProjectCompletion(task.getProjectId());
-        return "Task is successfully deleted...";
+    public DeleteResponse deleteTaskById(String taskId) {
+        try {
+            Task task = taskRepository.getById(taskId).orElseThrow(() -> new NoTaskFoundException("There is no task with that id, so it cannot be updated!"));
+            taskRepository.delete(task);
+            log.info("Updating completion of the project...");
+            projectCommonService.updateProjectCompletion(task.getProjectId());
+            DeleteResponse deleteTaskResponse = new DeleteResponse(true, "Task deleted successfully...");
+
+            log.info("Project is deleted as well as his tasks...");
+            return deleteTaskResponse;
+        } catch (NoTaskFoundException e) {
+            log.error("Task not found: {}", taskId);
+            throw e;
+        } catch (Exception e) {
+            log.error("Error deleting task {}: {}", taskId, e.getMessage());
+            throw new RuntimeException("Failed to delete task: " + e.getMessage());
+        }
+
     }
 
     @Override
