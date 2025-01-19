@@ -1,6 +1,5 @@
 package com.example.demo.api;
 
-import com.example.demo.exceptions.NoGroupFoundException;
 import com.example.demo.models.dto.*;
 import com.example.demo.service.UserService;
 import com.example.demo.config.openapi.ShowAPI;
@@ -11,10 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -58,6 +53,24 @@ public class UserController {
             return ResponseEntity.ok(groupNotMembers);
         } catch (Exception e) {
             log.error("Error fetching users: ", e);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/get-users-for-task-creation")
+    public ResponseEntity<List<UserToAddInGroupResponse> > fetchUsersForTasks(
+            @RequestParam(value = "groupId", required = true) String groupId,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "4") int size
+    ) {
+        try {
+            log.info("Searching for users...");
+            Pageable pageable = PageRequest.of(page, size);
+            List<UserToAddInGroupResponse> users = userService.fetchUsersOfTheGroupWithText(groupId, search, pageable);
+
+            return ResponseEntity.ok(users);
+        } catch(Exception e ){
             return ResponseEntity.badRequest().build();
         }
     }

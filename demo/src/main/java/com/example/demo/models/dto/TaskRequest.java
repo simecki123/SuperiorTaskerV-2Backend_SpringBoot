@@ -41,6 +41,5 @@ public class TaskRequest {
     @DateTimeFormat
     private LocalDateTime endDate;
 
-    @NotBlank
-    private TaskStatus status;
+
 }

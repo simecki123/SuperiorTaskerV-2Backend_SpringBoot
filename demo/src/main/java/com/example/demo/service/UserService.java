@@ -18,6 +18,7 @@ public interface UserService {
     byte[] downloadUserProfilePhoto() throws IOException;
     UserProfileEditResponse editUserProfile(String firstName, String lastName, String description, MultipartFile photoFile);
     List<UserToAddInGroupResponse> fetchUserByNameAndNotHisGroup(String groupId, String search, Pageable pageable);
+    List<UserToAddInGroupResponse> fetchUsersOfTheGroupWithText(String groupId, String search, Pageable pageable);
     void updateFcmToken(String token);
 
 

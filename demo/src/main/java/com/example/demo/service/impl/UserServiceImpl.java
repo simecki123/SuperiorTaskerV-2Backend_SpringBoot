@@ -2,9 +2,6 @@ package com.example.demo.service.impl;
 
 import com.amazonaws.services.kms.model.NotFoundException;
 import com.example.demo.exceptions.NoGroupFoundException;
-import com.example.demo.exceptions.UnauthorizedException;
-import com.example.demo.models.dao.Group;
-import com.example.demo.models.dao.Task;
 import com.example.demo.models.dao.User;
 import com.example.demo.models.dao.UserGroupRelation;
 import com.example.demo.models.dto.*;
@@ -12,7 +9,6 @@ import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.UserGroupRelationRepository;
 import com.example.demo.security.utils.Helper;
 import com.example.demo.service.AmazonS3Service;
-import com.example.demo.service.UserGroupRelationService;
 import com.example.demo.service.UserService;
 import com.example.demo.converters.ConverterService;
 import com.example.demo.repository.UserRepository;
@@ -31,7 +27,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,17 +36,11 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-
     private final ConverterService converterService;
-
     private final AmazonS3Service amazonS3Service;
-
     private final MongoTemplate mongoTemplate;
-
     private final UserGroupRelationRepository groupMembershipRepository;
-
     private final GroupRepository groupRepository;
-
 
     @Override
     public UserDto getUserById(String id) {
@@ -71,7 +60,6 @@ public class UserServiceImpl implements UserService {
         return true;
     }
 
-
     @Override
     public String getUserIdByEmail(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
@@ -84,7 +72,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public byte[] downloadUserProfilePhoto() throws IOException {
         User user = userRepository.getUserById(Helper.getLoggedInUserId());
-
 
         String fileUri = user.getPhotoUri();
         if (fileUri == null || fileUri.trim().isEmpty()) {
@@ -121,7 +108,7 @@ public class UserServiceImpl implements UserService {
 
                 amazonS3Service.updateFileInS3(path, fileName, photoFile.getInputStream());
 
-                userProfile.setPhotoUri(path +  "/"  + fileName);
+                userProfile.setPhotoUri(path + "/" + fileName);
 
                 log.info("UserProfile photo updated successfully");
             } catch (IOException e) {
@@ -154,11 +141,12 @@ public class UserServiceImpl implements UserService {
         return response;
     }
 
-    @Override
-    public List<UserToAddInGroupResponse> fetchUserByNameAndNotHisGroup(String groupId, String search, Pageable pageable) {
+    private void validateGroup(String groupId) {
         groupRepository.findById(groupId)
                 .orElseThrow(() -> new NoGroupFoundException("No group found with ID: " + groupId));
+    }
 
+    private Criteria buildNameSearchCriteria(String search) {
         Criteria searchCriteria = new Criteria();
         if (search != null && !search.isEmpty()) {
             String[] searchTerms = search.trim().split("\\s+");
@@ -197,21 +185,11 @@ public class UserServiceImpl implements UserService {
                 searchCriteria.orOperator(possibleMatches.toArray(new Criteria[0]));
             }
         }
+        return searchCriteria;
+    }
 
-        List<String> existingUserIds = groupMembershipRepository
-                .findAllByGroupId(groupId)
-                .stream()
-                .map(UserGroupRelation::getUserId)
-                .collect(Collectors.toList());
-
-        Criteria notInGroupCriteria = Criteria.where("_id").nin(existingUserIds);
-
-        Criteria finalCriteria = new Criteria().andOperator(
-                searchCriteria,
-                notInGroupCriteria
-        );
-
-        Aggregation aggregation = Aggregation.newAggregation(
+    private Aggregation buildUserAggregation(Criteria finalCriteria, Pageable pageable) {
+        return Aggregation.newAggregation(
                 Aggregation.match(finalCriteria),
                 Aggregation.project()
                         .and("_id").as("id")
@@ -224,7 +202,9 @@ public class UserServiceImpl implements UserService {
                 Aggregation.skip((long) pageable.getPageNumber() * pageable.getPageSize()),
                 Aggregation.limit(pageable.getPageSize())
         );
+    }
 
+    private List<UserToAddInGroupResponse> executeUserAggregation(Aggregation aggregation) {
         AggregationResults<User> results = mongoTemplate.aggregate(
                 aggregation,
                 "users",
@@ -237,5 +217,41 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<UserToAddInGroupResponse> fetchUserByNameAndNotHisGroup(String groupId, String search, Pageable pageable) {
+        validateGroup(groupId);
 
+        Criteria searchCriteria = buildNameSearchCriteria(search);
+
+        List<String> existingUserIds = groupMembershipRepository
+                .findAllByGroupId(groupId)
+                .stream()
+                .map(UserGroupRelation::getUserId)
+                .collect(Collectors.toList());
+
+        Criteria notInGroupCriteria = Criteria.where("_id").nin(existingUserIds);
+        Criteria finalCriteria = new Criteria().andOperator(searchCriteria, notInGroupCriteria);
+
+        Aggregation aggregation = buildUserAggregation(finalCriteria, pageable);
+        return executeUserAggregation(aggregation);
+    }
+
+    @Override
+    public List<UserToAddInGroupResponse> fetchUsersOfTheGroupWithText(String groupId, String search, Pageable pageable) {
+        validateGroup(groupId);
+
+        Criteria searchCriteria = buildNameSearchCriteria(search);
+
+        List<String> groupUserIds = groupMembershipRepository
+                .findAllByGroupId(groupId)
+                .stream()
+                .map(UserGroupRelation::getUserId)
+                .collect(Collectors.toList());
+
+        Criteria inGroupCriteria = Criteria.where("_id").in(groupUserIds);
+        Criteria finalCriteria = new Criteria().andOperator(searchCriteria, inGroupCriteria);
+
+        Aggregation aggregation = buildUserAggregation(finalCriteria, pageable);
+        return executeUserAggregation(aggregation);
+    }
 }
