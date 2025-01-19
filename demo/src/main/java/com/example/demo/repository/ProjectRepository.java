@@ -13,5 +13,6 @@ public interface ProjectRepository extends MongoRepository<Project, String> {
     boolean existsByUserIdAndGroupIdAndCompletion(String userId, String groupId, double completion);
     Optional<Project> findByUserIdAndGroupIdAndCompletion(String userId, String groupId, double completion);
     List<Project> findAllByGroupIdAndCompletion(String groupId, String completion);
+    List<Project> findAllByUserId(String userId);
     List<Project> findAllByGroupId(String groupId);
 }
