@@ -7,17 +7,20 @@ spring:
     mongodb:
       uri: ${SPRING_MONGODB_URI}
       database: ${SPRING_MONGODB_BASE_NAME}
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USER}
+    password: ${RABBITMQ_PASSWORD}
 
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION_MS}
   cookie-name: ${JWT_COOKIE_NAME}
-
 aws:
   access-key: ${S3_ACCESS_KEY}
   secret-key: ${S3_SECRET_KEY}
   bucket-name: ${S3_BUCKET_NAME}
-
 frontend:
   url:
     dev: ${FRONTEND_URL_DEV}

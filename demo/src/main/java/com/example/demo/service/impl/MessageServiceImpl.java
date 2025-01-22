@@ -5,15 +5,18 @@ import com.example.demo.exceptions.NoGroupFoundException;
 import com.example.demo.exceptions.NoMessageException;
 import com.example.demo.exceptions.NoUserFoundException;
 import com.example.demo.models.dao.User;
+import com.example.demo.models.dao.UserGroupRelation;
 import com.example.demo.models.dto.MessageRequest;
 import com.example.demo.models.dto.MessageResponse;
 import com.example.demo.models.enums.MessageStatus;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.MessageRepository;
+import com.example.demo.repository.UserGroupRelationRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.utils.Helper;
 import com.example.demo.service.MessageService;
 import com.example.demo.models.dao.Message;
+import com.example.demo.service.WebSocketService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -43,6 +47,10 @@ public class MessageServiceImpl implements MessageService {
 
     private final GroupRepository groupRepository;
 
+    private final WebSocketService webSocketService;
+
+    private final UserGroupRelationRepository userGroupRelationRepository;
+
     @Override
     public MessageResponse createMessage(MessageRequest messageRequest) {
         groupRepository.findById(messageRequest.getGroupId()).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
@@ -57,8 +65,10 @@ public class MessageServiceImpl implements MessageService {
         message.setLastName(user.getLastName());
         message.setPhotoUri(user.getPhotoUri());
 
-        messageRepository.save(message);
+        Message savedMessage = messageRepository.save(message);
         log.info("Message created ...");
+
+        webSocketService.notifyGroupUsersOfNewMessage(savedMessage);
 
         return converterService.convertToMessageResponse(message);
     }
@@ -79,10 +89,15 @@ public class MessageServiceImpl implements MessageService {
         if (groupId != null) {
             groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
             query.addCriteria(Criteria.where("groupId").is(groupId));
-        }
+        } else if (userProfileId != null) {
+            List<UserGroupRelation> userGroups = userGroupRelationRepository.findAllByUserId(userProfileId);
+            List<String> groupIds = userGroups.stream()
+                    .map(UserGroupRelation::getGroupId)
+                    .collect(Collectors.toList());
 
-        if (userProfileId != null) {
-            query.addCriteria(Criteria.where("userProfileId").is(userProfileId));
+            if (!groupIds.isEmpty()) {
+                query.addCriteria(Criteria.where("groupId").in(groupIds));
+            }
         }
 
         query.with(Sort.by(Sort.Direction.DESC, "createdAt"))
@@ -91,7 +106,6 @@ public class MessageServiceImpl implements MessageService {
 
         List<Message> messages = mongoTemplate.find(query, Message.class);
 
-        // Convert photo URI to URL if applicable
         messages.forEach(message -> {
             if (message.getPhotoUri() != null) {
                 String convertedUrl = converterService.convertPhotoUriToUrl(message.getPhotoUri());

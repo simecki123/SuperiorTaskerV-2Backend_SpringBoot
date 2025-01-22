@@ -21,19 +21,21 @@ import java.util.List;
 public class WebSocketServiceImpl implements WebSocketService {
 
     private final SimpMessagingTemplate messagingTemplate;
-
-    private final MessageRepository notificationRepository;
-
+    private final MessageRepository messageRepository;
     private final UserGroupRelationRepository groupMembershipRepository;
 
     @Override
     public void notifyGroupUsersOfNewMessage(Message message) {
-        notificationRepository.save(message);
-        List<UserGroupRelation> memberships = groupMembershipRepository.findAllByGroupId(message.getGroupId());
+        List<UserGroupRelation> memberships = groupMembershipRepository.findAllByGroupId(message.getGroupId())
+                .stream()
+                .filter(membership -> !membership.getUserId().equals(message.getUserProfileId()))
+                .toList();
+
         log.info("Notifying {} members of the group with a new message", memberships.size());
+
         for (UserGroupRelation membership : memberships) {
             String userId = membership.getUserId();
-            messagingTemplate.convertAndSend("/topic/messages" , message);
+            messagingTemplate.convertAndSend("/topic/messages." + userId, message);
         }
     }
 }
