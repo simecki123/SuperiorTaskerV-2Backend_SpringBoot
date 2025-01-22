@@ -172,6 +172,22 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    public ProjectResponse updateProject(ProjectRequest request, String projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new NoProjectFoundException("No project found with id: " + projectId));
+
+        project.setName(request.getName());
+        project.setDescription(request.getDescription());
+        project.setStartDate(request.getStartDate());
+        project.setEndDate(request.getEndDate());
+
+        projectRepository.save(project);
+
+        log.info("Project updated successfully");
+        return converterService.convertToUserProjectDto(project);
+    }
+
+    @Override
     public String deleteProjectByGroupId(String groupId) {
         Group group = groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("There is no group with this id ..."));
         List<Project> projectList = projectRepository.findAllByGroupId(groupId);

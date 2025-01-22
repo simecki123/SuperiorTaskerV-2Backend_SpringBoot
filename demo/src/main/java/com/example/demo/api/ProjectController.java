@@ -71,6 +71,22 @@ public class ProjectController {
         }
     }
 
+    @PatchMapping("/update-project")
+    public ResponseEntity<ProjectResponse> updateProject(
+            @RequestBody ProjectRequest projectRequest,
+            @RequestParam String projectId) {
+        try {
+            log.info("Updating project with id: {}", projectId);
+            return ResponseEntity.ok(projectService.updateProject(projectRequest, projectId));
+        } catch (NoProjectFoundException e) {
+            log.error("Project not found: {}", projectId);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Error updating project: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @DeleteMapping("/delete-project")
     public ResponseEntity<DeleteResponse> deleteProject(@RequestParam String projectId) {
         try {

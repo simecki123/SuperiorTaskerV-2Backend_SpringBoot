@@ -16,6 +16,8 @@ public interface ProjectService {
                                          String search, Pageable pageable);
 
     DeleteResponse deleteProjectById(String projectId);
+
+    ProjectResponse updateProject(ProjectRequest request, String projectId);
     String deleteProjectByGroupId(String groupId);
 
 }
