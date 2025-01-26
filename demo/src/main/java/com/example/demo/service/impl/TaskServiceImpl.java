@@ -145,6 +145,22 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    public TaskResponse updateTask(TaskRequest taskRequest, String taskId) {
+        Task task = taskRepository.getById(taskId).orElseThrow(() -> new NoTaskFoundException("No task found with id: " + taskId));
+        task.setName(taskRequest.getName());
+        task.setDescription(taskRequest.getDescription());
+        task.setUserId(taskRequest.getUserId());
+        task.setStartDate(taskRequest.getStartDate());
+        task.setEndDate(taskRequest.getEndDate());
+
+        taskRepository.save(task);
+        log.info("Task updated successfully");
+        return converterService.convertToUserTaskDto(task);
+
+
+    }
+
+    @Override
     public DeleteResponse deleteTaskById(String taskId) {
         try {
             Task task = taskRepository.getById(taskId).orElseThrow(() -> new NoTaskFoundException("There is no task with that id, so it cannot be updated!"));

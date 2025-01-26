@@ -87,6 +87,20 @@ public class ProjectController {
         }
     }
 
+    @GetMapping("/get-project-by-id")
+    public ResponseEntity<ProjectResponse> getProjectById(@RequestParam String projectId) {
+        try {
+            log.error("Searching for project with id: {}", projectId);
+            return ResponseEntity.ok(projectService.getProjectById(projectId));
+        } catch (NoProjectFoundException e) {
+            log.error("Project not found with id: {}", projectId);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Error updating project with id: {}", projectId);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @DeleteMapping("/delete-project")
     public ResponseEntity<DeleteResponse> deleteProject(@RequestParam String projectId) {
         try {

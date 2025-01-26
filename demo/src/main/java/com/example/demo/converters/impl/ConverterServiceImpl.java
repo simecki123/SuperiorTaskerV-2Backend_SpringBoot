@@ -131,6 +131,7 @@ public class ConverterServiceImpl implements ConverterService {
         response.setId(task.getId());
         response.setUserId(task.getUserId());
         response.setGroupId(task.getGroupId());
+        response.setProjectId(task.getProjectId());
         response.setName(task.getName());
         response.setDescription(task.getDescription());
         response.setTaskStatus(task.getStatus());

@@ -14,6 +14,8 @@ public interface TaskService {
 
     String updateTaskStatus(String id, TaskStatus taskStatus);
 
+    TaskResponse updateTask(TaskRequest taskRequest, String taskId);
+
     DeleteResponse deleteTaskById(String taskId);
     List<UserProjectResponse> fetchUserProjectRelations(List<UserProjectRelationRequest> userProjectRelationRequests);
 

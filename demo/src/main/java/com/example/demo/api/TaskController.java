@@ -29,7 +29,7 @@ public class TaskController {
         try {
             log.info("Creating new task...");
             return ResponseEntity.ok(taskService.createTask(taskRequest));
-        }catch (NoProjectFoundException | NoGroupFoundException e) {
+        } catch (NoProjectFoundException | NoGroupFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (Error e) {
             return ResponseEntity.badRequest().build();
@@ -63,7 +63,7 @@ public class TaskController {
         }
     }
 
-    @PatchMapping("/update-task")
+    @PatchMapping("/update-task-status")
     public ResponseEntity<String> updateTaskStatus(@RequestParam String taskId, @RequestParam TaskStatus taskStatus) {
         try {
             log.info("Updating task status...");
@@ -75,6 +75,24 @@ public class TaskController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @PatchMapping("update-task")
+    public ResponseEntity<TaskResponse> updateTask(
+            @RequestBody TaskRequest taskRequest,
+            @RequestParam String taskId
+    ) {
+        try {
+            log.info("Updating task with Id {}: ", taskId);
+            return ResponseEntity.ok(taskService.updateTask(taskRequest, taskId));
+        } catch (NoTaskFoundException e) {
+            log.info("Error finding task with Id {}: ", taskId);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.info("Error updating task: {}: ", taskId);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
 
     @PatchMapping("/change-task-user")
     public ResponseEntity<String> changeUserOfTheTask(@RequestParam String taskId, @RequestParam String newUserId){

@@ -150,6 +150,13 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    public ProjectResponse getProjectById(String id) {
+        Project project = projectRepository.findById(id).orElseThrow(() -> new NoProjectFoundException("No project found with id: " + id));
+        return converterService.convertToUserProjectDto(project);
+
+    }
+
+    @Override
     public DeleteResponse deleteProjectById(String projectId) {
         try {
             Project project = projectRepository.findById(projectId).orElseThrow(() -> new NoProjectFoundException("There is no project with that id present..."));
