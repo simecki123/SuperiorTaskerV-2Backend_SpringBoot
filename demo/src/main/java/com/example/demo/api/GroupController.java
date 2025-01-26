@@ -176,13 +176,13 @@ public class GroupController {
             @RequestParam String userId,
             @RequestParam String groupId
     ) {
-        if (authService.hasRole(groupId, Role.ADMIN)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-
         try {
-            log.info("Create new user group Relation...");
-            return ResponseEntity.ok(userGroupRelationService.leaveGroup(userId, groupId));
+            log.info("User leaving group...");
+            return ResponseEntity.ok(userGroupRelationService.removeUserFromGroup(userId, groupId, false));
         } catch (NoGroupFoundException | NoUserFoundException | NoUserGroupRelation e) {
             return ResponseEntity.notFound().build();
+        } catch (UserNotAdminException | CantKickYourselfException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (Error e) {
             return ResponseEntity.badRequest().build();
         }
@@ -193,14 +193,13 @@ public class GroupController {
             @RequestParam String userId,
             @RequestParam String groupId
     ) {
-        if (!authService.hasRole(groupId, Role.ADMIN)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-
-
         try {
-            log.info("Kicking user from the group...");
-            return ResponseEntity.ok(userGroupRelationService.kickUser(userId, groupId));
-        } catch (NoGroupFoundException | NoUserFoundException | NoUserGroupRelation | CantKickYourselfException e) {
+            log.info("Kicking user from group...");
+            return ResponseEntity.ok(userGroupRelationService.removeUserFromGroup(userId, groupId, true));
+        } catch (NoGroupFoundException | NoUserFoundException | NoUserGroupRelation e) {
             return ResponseEntity.notFound().build();
+        } catch (UserNotAdminException | CantKickYourselfException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (Error e) {
             return ResponseEntity.badRequest().build();
         }

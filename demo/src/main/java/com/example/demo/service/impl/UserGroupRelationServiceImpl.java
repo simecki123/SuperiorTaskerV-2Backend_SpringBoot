@@ -8,10 +8,7 @@ import com.example.demo.models.dao.UserGroupRelation;
 import com.example.demo.models.dto.*;
 
 import com.example.demo.models.enums.Role;
-import com.example.demo.repository.GroupRepository;
-import com.example.demo.repository.ProjectRepository;
-import com.example.demo.repository.UserGroupRelationRepository;
-import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.*;
 import com.example.demo.security.services.AuthService;
 import com.example.demo.security.utils.Helper;
 import com.example.demo.service.UserGroupRelationService;
@@ -40,6 +37,7 @@ public class UserGroupRelationServiceImpl implements UserGroupRelationService {
     private final ConverterService converterService;
     private final MongoTemplate mongoTemplate;
     private final AuthService authService;
+    private final TaskRepository taskRepository;
 
 
     @Override
@@ -182,37 +180,45 @@ public class UserGroupRelationServiceImpl implements UserGroupRelationService {
         return responses;
     }
 
-
     @Override
-    public String leaveGroup(String userId, String groupId) throws NoUserGroupRelation {
-        groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
-        userRepository.findById(userId).orElseThrow(() -> new NoUserFoundException("User doesn't exist..."));
+    public String removeUserFromGroup(String userId, String groupId, boolean isKick) throws NoUserGroupRelation, CantKickYourselfException, UserNotAdminException {
+        groupRepository.findById(groupId)
+                .orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NoUserFoundException("User doesn't exist"));
 
-        UserGroupRelation userGroupRelation = userGroupRelationRepository.findByUserIdAndGroupId(userId, groupId);
-        if(userGroupRelation != null) {
-            userGroupRelationRepository.delete(userGroupRelation);
-            return "User removed form group successfully";
-        } else  {
-            throw new NoUserGroupRelation("User is not a member of this group...");
+        UserDto loggedInUser = authService.fetchMe();
+        UserGroupRelation targetUserRelation = userGroupRelationRepository.findByUserIdAndGroupId(userId, groupId);
+        UserGroupRelation loggedInUserRelation = userGroupRelationRepository.findByUserIdAndGroupId(loggedInUser.getId(), groupId);
+
+        if (targetUserRelation == null) {
+            throw new NoUserGroupRelation("User is not a member of this group");
         }
+
+        // Check if target user is admin
+        if (targetUserRelation.getRole() == Role.ADMIN) {
+            throw new CantKickYourselfException("Admin users cannot be removed from the group");
+        }
+
+        // For kick operation, verify logged-in user is admin
+        if (isKick && ( loggedInUserRelation == null || loggedInUserRelation.getRole() != Role.ADMIN)) {
+            throw new UserNotAdminException("Only admins can kick users");
+        }
+
+        // Reassign tasks to the admin/logged-in user
+        List<Task> userTasks = taskRepository.findAllByUserIdAndGroupId(userId, groupId);
+        String newUserId = isKick ? loggedInUser.getId() : loggedInUserRelation.getRole() == Role.ADMIN ? loggedInUser.getId() : null;
+
+        if (newUserId != null) {
+            userTasks.forEach(task -> {
+                task.setUserId(newUserId);
+                taskRepository.save(task);
+            });
+        }
+
+        userGroupRelationRepository.delete(targetUserRelation);
+        return isKick ? "User kicked from group successfully" : "User left group successfully";
     }
 
-    @Override
-    public String kickUser(String userId, String groupId) throws NoUserGroupRelation, CantKickYourselfException {
-        groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
-         User user = userRepository.findById(userId).orElseThrow(() -> new NoUserFoundException("User doesn't exist..."));
-         UserDto user1 = authService.fetchMe();
 
-        UserGroupRelation userGroupRelation = userGroupRelationRepository.findByUserIdAndGroupId(userId, groupId);
-        if(!user.getEmail().equals(user1.getEmail())) {
-            if(userGroupRelation != null) {
-                userGroupRelationRepository.delete(userGroupRelation);
-                return "User removed from group successfully";
-            } else  {
-                throw new NoUserGroupRelation("User is not a member of this group...");
-            }
-        } else {
-            throw new CantKickYourselfException("Cant kick yourself from the group you are admin of ...");
-        }
-    }
 }
