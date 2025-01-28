@@ -15,6 +15,8 @@ public interface ProjectService {
                                          Boolean includeComplete, Boolean includeNotStarted,
                                          String search, Pageable pageable);
 
+    List<ProjectResponse> findAllProjectsByUserId(String userId);
+
     ProjectResponse getProjectById(String id);
 
     DeleteResponse deleteProjectById(String projectId);

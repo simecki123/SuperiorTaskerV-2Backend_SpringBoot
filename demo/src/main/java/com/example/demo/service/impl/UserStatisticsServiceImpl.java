@@ -3,11 +3,13 @@ package com.example.demo.service.impl;
 import com.example.demo.exceptions.NoUserFoundException;
 import com.example.demo.models.dao.Project;
 import com.example.demo.models.dao.Task;
+import com.example.demo.models.dto.ProjectResponse;
 import com.example.demo.models.dto.UserStatisticsDto;
 import com.example.demo.models.enums.TaskStatus;
 import com.example.demo.repository.ProjectRepository;
 import com.example.demo.repository.TaskRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.ProjectService;
 import com.example.demo.service.UserStatisticsService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,7 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final ProjectService projectService;
 
     @Override
     public UserStatisticsDto getUserStats(String userId) {
@@ -33,7 +36,7 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
 
         List<Task> userTasks = taskRepository.findAllByUserId(userId);
 
-        List<Project> userProjects = projectRepository.findAllByUserId(userId);
+        List<ProjectResponse> userProjects = projectService.findAllProjectsByUserId(userId);
 
         int totalTasks = userTasks.size();
         int completedTasks = (int) userTasks.stream()

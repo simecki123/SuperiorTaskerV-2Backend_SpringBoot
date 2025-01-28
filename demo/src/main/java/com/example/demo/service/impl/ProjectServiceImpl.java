@@ -150,6 +150,29 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    public List<ProjectResponse> findAllProjectsByUserId(String userId) {
+        if (userId == null || userId.isEmpty()) {
+            throw new IllegalArgumentException("UserId cannot be null or empty");
+        }
+
+        List<Project> allProjects = projectRepository.findAll();
+
+        return allProjects.stream()
+                .filter(project -> {
+                    UserProjectRelationRequest request = new UserProjectRelationRequest();
+                    request.setUserId(userId);
+                    request.setProjectId(project.getId());
+                    request.setGroupId(project.getGroupId());
+
+                    List<UserProjectResponse> response = taskService.fetchUserProjectRelations(
+                            Collections.singletonList(request));
+                    return !response.isEmpty();
+                })
+                .map(converterService::convertToUserProjectDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public ProjectResponse getProjectById(String id) {
         Project project = projectRepository.findById(id).orElseThrow(() -> new NoProjectFoundException("No project found with id: " + id));
         return converterService.convertToUserProjectDto(project);
