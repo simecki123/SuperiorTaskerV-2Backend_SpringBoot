@@ -4,14 +4,12 @@ import com.example.demo.converters.ConverterService;
 import com.example.demo.exceptions.NoGroupFoundException;
 import com.example.demo.exceptions.NoProjectFoundException;
 import com.example.demo.exceptions.NoTaskFoundException;
-import com.example.demo.models.dao.Project;
 import com.example.demo.models.dao.Task;
 import com.example.demo.models.dto.*;
 import com.example.demo.models.enums.TaskStatus;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.ProjectRepository;
 import com.example.demo.repository.TaskRepository;
-import com.example.demo.service.ProjectService;
 import com.example.demo.service.TaskService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -43,6 +40,11 @@ public class TaskServiceImpl implements TaskService {
     private final ProjectCommonServiceImpl projectCommonService;
     private final MongoTemplate mongoTemplate;
 
+    /**
+     * Method to create task
+     * @param taskRequest This is task that needs to be created.
+     * @return Task response.
+     */
     @Override
     public TaskResponse createTask(TaskRequest taskRequest) {
         log.info("Starting to create task");
@@ -69,19 +71,21 @@ public class TaskServiceImpl implements TaskService {
         return converterService.convertToUserTaskDto(task);
     }
 
-    @Override
-    public TaskResponse getTaskById(String taskId) {
-        Task task = taskRepository.getById(taskId).orElseThrow(() -> new NoTaskFoundException("No task found associated with given ID"));
-        log.info("Get task by id finished");
-        return converterService.convertToUserTaskDto(task);
-    }
-
+    /**
+     * Get all User's tasks.
+     * @param userId User whose tasks are getting fetched.
+     * @param groupId Users group that project belongs to (Optional).
+     * @param projectId GroupProjects that tasks belong to (Optional).
+     * @param taskStatus User can search for tasks by status as well.
+     * @param search User can search for tasks by name as well.
+     * @param pageable Pagination
+     * @return List of tasks that match given conditions.
+     */
     @Override
     public List<TaskResponse> getAllTasksForUser(String userId, String groupId, String projectId, TaskStatus taskStatus, String search, Pageable pageable) {
         log.info("Searching for tasks with userId: {}", userId);
 
         Criteria criteria = new Criteria();
-
 
         // Optionally include groupId, projectId, taskStatus, and search
         if (userId != null && !userId.isEmpty()) {
@@ -134,6 +138,12 @@ public class TaskServiceImpl implements TaskService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Method to update task status.
+     * @param id Task id.
+     * @param taskStatus New updated task status.
+     * @return String message of success or fail.
+     */
     @Override
     public String updateTaskStatus(String id, TaskStatus taskStatus) {
         Task task = taskRepository.getById(id).orElseThrow(() -> new NoTaskFoundException("There is no task with that id, so it cannot be updated!"));
@@ -144,6 +154,12 @@ public class TaskServiceImpl implements TaskService {
         return "Task status is successfully updated...";
     }
 
+    /**
+     * Method to update an entire task.
+     * @param taskRequest Existing task with updated values.
+     * @param taskId id of the task we want to update
+     * @return Return updated task.
+     */
     @Override
     public TaskResponse updateTask(TaskRequest taskRequest, String taskId) {
         Task task = taskRepository.getById(taskId).orElseThrow(() -> new NoTaskFoundException("No task found with id: " + taskId));
@@ -160,6 +176,11 @@ public class TaskServiceImpl implements TaskService {
 
     }
 
+    /**
+     * Method to delete task by id.
+     * @param taskId Task id
+     * @return Special response that contains boolean success and message.
+     */
     @Override
     public DeleteResponse deleteTaskById(String taskId) {
         try {
@@ -181,6 +202,12 @@ public class TaskServiceImpl implements TaskService {
 
     }
 
+    /**
+     * Special method that returns user project relations. On frontend if user has task that belongs to some project them user is member of that project.
+     * Because there is no UserProjectRelation in database we find user project relation through this method.
+     * @param requests Request has user id, project id and groupId.
+     * @return List of user project relation objects.
+     */
     @Override
     public List<UserProjectResponse> fetchUserProjectRelations(List<UserProjectRelationRequest> requests) {
         if (requests == null || requests.isEmpty()) {

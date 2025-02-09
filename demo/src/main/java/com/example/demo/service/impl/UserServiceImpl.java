@@ -1,6 +1,5 @@
 package com.example.demo.service.impl;
 
-import com.amazonaws.services.kms.model.NotFoundException;
 import com.example.demo.exceptions.NoGroupFoundException;
 import com.example.demo.models.dao.User;
 import com.example.demo.models.dao.UserGroupRelation;
@@ -18,7 +17,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,65 +40,25 @@ public class UserServiceImpl implements UserService {
     private final UserGroupRelationRepository groupMembershipRepository;
     private final GroupRepository groupRepository;
 
-    @Override
-    public UserDto getUserById(String id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        log.info("Get user by id finished");
-        return converterService.convertToUserDto(user);
-    }
-
-    @Override
-    public boolean checkEmail(String email) {
-        boolean exists = userRepository.existsByEmail(email);
-
-        if (!exists) {
-            throw new NotFoundException("The provided email is not correct");
-        }
-        return true;
-    }
-
-    @Override
-    public String getUserIdByEmail(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        if(user == null) {
-            throw new NotFoundException("User not found with email: " + email);
-        }
-        return user.getId();
-    }
-
-    @Override
-    public byte[] downloadUserProfilePhoto() throws IOException {
-        User user = userRepository.getUserById(Helper.getLoggedInUserId());
-
-        String fileUri = user.getPhotoUri();
-        if (fileUri == null || fileUri.trim().isEmpty()) {
-            throw new IllegalArgumentException("The photoUri field is missing or empty in the UserProfile.");
-        }
-        log.info("fileUri: {}", fileUri);
-        return amazonS3Service.downloadFromS3(fileUri);
-    }
-
-    @Override
-    public void updateFcmToken(String token) {
-        User user = userRepository.getUserById(Helper.getLoggedInUserId());
-        if(user == null) {
-            throw new NotFoundException("Logged user not found");
-        }
-        user.setFcmToken(token);
-        userRepository.save(user);
-        log.info("FcmToken successfully updated for the user profile");
-    }
-
+    /**
+     * This is service method so user can edit his user-profile
+     * @param firstName Text for the first name
+     * @param lastName Text for last name
+     * @param description Text for description
+     * @param photoFile Multipart file. User can send image file
+     * @return Return statement returns User Profile response with first name, last name, description and the photo file
+     */
     @Override
     public UserProfileEditResponse editUserProfile(String firstName, String lastName, String description, MultipartFile photoFile) {
         User userProfile = userRepository.getUserById(Helper.getLoggedInUserId());
         UserProfileEditResponse response = new UserProfileEditResponse();
 
+        // User profile needs to exist to be edited...
         if (userProfile == null) {
             throw new IllegalStateException("UserProfile is null");
         }
 
+        // if photo file exists then update file in S3 amazon service...
         if (photoFile != null) {
             try {
                 String fileName = userProfile.getId();
@@ -141,11 +99,19 @@ public class UserServiceImpl implements UserService {
         return response;
     }
 
+    /**
+     *  Helper method to check if certain group exists...
+     * @param groupId ID of wanted group...
+     */
     private void validateGroup(String groupId) {
         groupRepository.findById(groupId)
                 .orElseThrow(() -> new NoGroupFoundException("No group found with ID: " + groupId));
     }
 
+    /**
+     * Helper method to create search criteria. This search criteria is to find user by first name and last name.
+     * @return search criteria first and the last name.
+     */
     private Criteria buildNameSearchCriteria(String search) {
         Criteria searchCriteria = new Criteria();
         if (search != null && !search.isEmpty()) {
@@ -188,6 +154,12 @@ public class UserServiceImpl implements UserService {
         return searchCriteria;
     }
 
+    /**
+     * Helper method to build user aggregation...
+     * @param finalCriteria criteria
+     * @param pageable for pagination...
+     * @return returns wanted aggregation to find users.
+     */
     private Aggregation buildUserAggregation(Criteria finalCriteria, Pageable pageable) {
         return Aggregation.newAggregation(
                 Aggregation.match(finalCriteria),
@@ -204,6 +176,11 @@ public class UserServiceImpl implements UserService {
         );
     }
 
+    /**
+     * Helper method to execute user aggregation and return wanted list of users.
+     * @param aggregation all conditions that are required of user.
+     * @return list of special user responses...
+     */
     private List<UserToAddInGroupResponse> executeUserAggregation(Aggregation aggregation) {
         AggregationResults<User> results = mongoTemplate.aggregate(
                 aggregation,
@@ -217,6 +194,13 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Method to fetch all users from database that are not part of certain group and name
+     * @param groupId User shouldn't belong to this group.
+     * @param search Users first and last name.
+     * @param pageable Pagination
+     * @return list of users...
+     */
     @Override
     public List<UserToAddInGroupResponse> fetchUserByNameAndNotHisGroup(String groupId, String search, Pageable pageable) {
         validateGroup(groupId);
@@ -236,6 +220,13 @@ public class UserServiceImpl implements UserService {
         return executeUserAggregation(aggregation);
     }
 
+    /**
+     * Method that will return list of all users from database that belong to some group.
+     * @param groupId Group that user belongs to.
+     * @param search Users first and last name.
+     * @param pageable Pagination.
+     * @return list of users. (Uses same UserToAddInGroupResponse like method above but logic of methods is different. Do not be confused...)
+     */
     @Override
     public List<UserToAddInGroupResponse> fetchUsersOfTheGroupWithText(String groupId, String search, Pageable pageable) {
         validateGroup(groupId);

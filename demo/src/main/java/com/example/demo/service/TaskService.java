@@ -8,14 +8,9 @@ import java.util.List;
 
 public interface TaskService {
     TaskResponse createTask( TaskRequest taskRequest);
-    TaskResponse getTaskById(String taskId);
-
     List<TaskResponse> getAllTasksForUser(String userId, String groupId, String projectId, TaskStatus taskStatus, String search, Pageable pageable );
-
     String updateTaskStatus(String id, TaskStatus taskStatus);
-
     TaskResponse updateTask(TaskRequest taskRequest, String taskId);
-
     DeleteResponse deleteTaskById(String taskId);
     List<UserProjectResponse> fetchUserProjectRelations(List<UserProjectRelationRequest> userProjectRelationRequests);
 

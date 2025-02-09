@@ -3,7 +3,6 @@ package com.example.demo.service.impl;
 import com.example.demo.converters.ConverterService;
 import com.example.demo.exceptions.NoGroupFoundException;
 import com.example.demo.exceptions.NoProjectFoundException;
-import com.example.demo.models.dao.Group;
 import com.example.demo.models.dao.Project;
 import com.example.demo.models.dao.Task;
 import com.example.demo.models.dto.*;
@@ -40,6 +39,11 @@ public class ProjectServiceImpl implements ProjectService {
     private final TaskRepository taskRepository;
     private final GroupRepository groupRepository;
 
+    /**
+     * Method to create new project.
+     * @param request Project that needs to be created.
+     * @return New project.
+     */
     @Override
     public ProjectResponse createProject(ProjectRequest request) {
         groupRepository.findById(request.getGroupId()).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
@@ -59,6 +63,18 @@ public class ProjectServiceImpl implements ProjectService {
 
     }
 
+    /**
+     * Method to fetch all Projects.
+     * @param userId User.
+     * @param groupId Group.
+     * @param startCompletion starting value of completion.
+     * @param endCompletion end point of completion.
+     * @param includeComplete include projects that have completion percentage of 100%.
+     * @param includeNotStarted include projects that have completion percentage of 0%.
+     * @param search string value of project name that we want to search for.
+     * @param pageable pagination.
+     * @return list of projects.
+     */
     @Override
     public List<ProjectResponse> getAllProjects(String userId, String groupId,
                                                 Double startCompletion, Double endCompletion,
@@ -149,6 +165,11 @@ public class ProjectServiceImpl implements ProjectService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Method that will find all projects by user id.
+     * @param userId User.
+     * @return list of projects.
+     */
     @Override
     public List<ProjectResponse> findAllProjectsByUserId(String userId) {
         if (userId == null || userId.isEmpty()) {
@@ -172,6 +193,11 @@ public class ProjectServiceImpl implements ProjectService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     *  Method that returns project by its id.
+     * @param id project Id.
+     * @return project.
+     */
     @Override
     public ProjectResponse getProjectById(String id) {
         Project project = projectRepository.findById(id).orElseThrow(() -> new NoProjectFoundException("No project found with id: " + id));
@@ -201,6 +227,12 @@ public class ProjectServiceImpl implements ProjectService {
 
     }
 
+    /**
+     * Method that handles update of the project.
+     * @param request New project value that existing project will be updated with.
+     * @param projectId id of the project that we want to update.
+     * @return new updated project.
+     */
     @Override
     public ProjectResponse updateProject(ProjectRequest request, String projectId) {
         Project project = projectRepository.findById(projectId)
@@ -217,28 +249,15 @@ public class ProjectServiceImpl implements ProjectService {
         return converterService.convertToUserProjectDto(project);
     }
 
-    @Override
-    public String deleteProjectByGroupId(String groupId) {
-        Group group = groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("There is no group with this id ..."));
-        List<Project> projectList = projectRepository.findAllByGroupId(groupId);
-        for (Project project : projectList){
-            projectRepository.delete(project);
-            deleteProjectTasks(project.getId());
-        }
-        log.info("Deleting all projects that belong to that group...");
-        return "AllProjects of the group are deleted";
-    }
-
-
-    // Helper method that will delete all project tasks if needed...
+    /**
+     * Helper method that will delete all project tasks if needed...
+     * @param projectId Project id
+     */
     private void deleteProjectTasks(String projectId){
         List<Task> projectTasks = taskRepository.findAllByProjectId(projectId);
         for(Task task : projectTasks) {
             taskRepository.delete(task);
         }
     }
-
-
-
 
 }

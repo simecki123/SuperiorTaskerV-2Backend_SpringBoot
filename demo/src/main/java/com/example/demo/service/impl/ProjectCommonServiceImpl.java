@@ -23,7 +23,11 @@ public class ProjectCommonServiceImpl implements ProjectTaskCommonService {
     private final ProjectRepository projectRepository;
     private final TaskRepository taskRepository;
 
-    // helper method to round completion decimal to 2 decimal points...
+    /**
+     * Method to update Project completion.
+     * THis method is used every time new task is created, task status is changed or if task is deleted.
+     * @param id project id
+     */
     @Override
     public void updateProjectCompletion(String id) {
         Project project = projectRepository.findById(id).orElseThrow(() -> new NoProjectFoundException("No project with associated id"));
@@ -46,6 +50,11 @@ public class ProjectCommonServiceImpl implements ProjectTaskCommonService {
         projectRepository.save(project);
     }
 
+    /**
+     * helper method to round completion decimal to 2 decimal points...
+     * @param value value that needs rounding.
+     * @return new value
+     */
     private double round(double value) {
 
         long factor = (long) Math.pow(10, 2);

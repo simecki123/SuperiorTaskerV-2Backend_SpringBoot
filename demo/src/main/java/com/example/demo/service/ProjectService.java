@@ -22,6 +22,5 @@ public interface ProjectService {
     DeleteResponse deleteProjectById(String projectId);
 
     ProjectResponse updateProject(ProjectRequest request, String projectId);
-    String deleteProjectByGroupId(String groupId);
 
 }

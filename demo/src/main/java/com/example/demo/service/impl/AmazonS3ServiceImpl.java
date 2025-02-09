@@ -9,8 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Date;
@@ -25,30 +23,12 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 
     private final String bucket;
 
-    @Override
-    public PutObjectResult uploadToS3(String path, String fileName, InputStream file) {
-        String fullPath = path + "/" + fileName;
-        return s3Client.putObject(bucket, fullPath, file, new ObjectMetadata());
-    }
-
-    @Override
-    public byte[] downloadFromS3(String fileUri) throws IOException {
-        S3Object s3Object = s3Client.getObject(bucket, fileUri);
-        S3ObjectInputStream s3is = s3Object.getObjectContent();
-        return s3is.readAllBytes();
-    }
-
-    @Override
-    public void deleteFromS3(String path, String fileName) {
-        try {
-            s3Client.deleteObject(bucket, path + "/" + fileName);
-            log.info("File deleted successfully");
-        } catch (AmazonServiceException e) {
-            log.info("Error occurred while deleting file");
-            log.error(e.getMessage());
-        }
-    }
-
+    /**
+     * Method that creates and updates if that is the case new image to amazon S3.
+     * @param path string value. Hardcoded value that can be profile photos or group photos
+     * @param fileName String value name of the file.
+     * @param newFile Image file
+     */
     @Override
     public void updateFileInS3(String path, String fileName, InputStream newFile) {
         String fullPath = path + "/" + fileName;
@@ -66,6 +46,11 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         }
     }
 
+    /**
+     * Method used in converter to create url of the image that is stored on amazon aws so frontend can use it.
+     * @param fileUri Existing url od the image.
+     * @return URL.
+     */
     @Override
     public URL generatePresignedUrl(String fileUri) {
         Date expiration = new Date();

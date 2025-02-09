@@ -13,7 +13,6 @@ import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.MessageRepository;
 import com.example.demo.repository.UserGroupRelationRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.security.utils.Helper;
 import com.example.demo.service.MessageService;
 import com.example.demo.models.dao.Message;
 import com.example.demo.service.WebSocketService;
@@ -22,13 +21,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,6 +47,11 @@ public class MessageServiceImpl implements MessageService {
 
     private final UserGroupRelationRepository userGroupRelationRepository;
 
+    /**
+     * Method that handles creation of new Message.
+     * @param messageRequest data of the new message that will be created.
+     * @return new message.
+     */
     @Override
     public MessageResponse createMessage(MessageRequest messageRequest) {
         groupRepository.findById(messageRequest.getGroupId()).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
@@ -73,6 +74,12 @@ public class MessageServiceImpl implements MessageService {
         return converterService.convertToMessageResponse(message);
     }
 
+    /**
+     * Method that handles update of some certain message. Message status is updated to the value read or unread.
+     * @param messageId Message.
+     * @param messageStatus new message status.
+     * @return edited message.
+     */
     @Override
     public String editMessage(String messageId, MessageStatus messageStatus) {
         Message message = messageRepository.findById(messageId).orElseThrow(() -> new NoMessageException("There is no message with associated id"));
@@ -82,6 +89,13 @@ public class MessageServiceImpl implements MessageService {
 
     }
 
+    /**
+     * Method that will return all messages by user profileId and groupId
+     * @param userProfileId user that created the message.
+     * @param groupId Group that message belongs to.
+     * @param pageable Pagination.
+     * @return list of messages.
+     */
     @Override
     public List<Message> getAllMessages(String userProfileId, String groupId, Pageable pageable) {
         Query query = new Query();

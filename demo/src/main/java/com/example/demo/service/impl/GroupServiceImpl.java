@@ -13,23 +13,15 @@ import com.example.demo.models.enums.Role;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.UserGroupRelationRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.security.services.AuthService;
 import com.example.demo.security.utils.Helper;
 import com.example.demo.service.AmazonS3Service;
 import com.example.demo.service.GroupService;
 import com.example.demo.service.UserGroupRelationService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.*;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import org.springframework.data.domain.Pageable;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,19 +37,18 @@ public class GroupServiceImpl implements GroupService {
 
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
-
     private final ConverterService converterService;
-
-    private final MongoTemplate mongoTemplate;
-
     private final UserGroupRelationRepository groupMembershipRepository;
-
     private final AmazonS3Service amazonS3Service;
-
-    private final AuthService authService;
     private final UserGroupRelationService userGroupRelationService;
 
-
+    /**
+     * Method that handles creation of the group.
+     * @param name name of the group.
+     * @param description description of the group.
+     * @param photoFile file of the profile photo of the group.
+     * @return new group.
+     */
     @Override
     public GroupResponse createGroup(String name, String description , MultipartFile photoFile) {
         Optional<Group> groupOptional = groupRepository.findByName(name);
@@ -89,10 +80,10 @@ public class GroupServiceImpl implements GroupService {
                 throw new RuntimeException("Failed to update the group photo", e);
             }
         }
-        // Saving group again because we must save group before creating file S3 and we need to update groupRepository to contain PhotoUri
+        // Saving group again because we must save group before creating file S3, and we need to update groupRepository to contain PhotoUri.
         groupRepository.save(group);
 
-        //? Saving the relation of the profile and group
+        //? Saving the relation of the profile and group.
         UserGroupRelation groupMembership = new UserGroupRelation();
         groupMembership.setGroupId(group.getId());
         groupMembership.setUserId(Helper.getLoggedInUserId());
@@ -105,13 +96,18 @@ public class GroupServiceImpl implements GroupService {
         response.setName(name);
         response.setDescription(description);
 
-        log.info("Group: ", response);
-        log.info("Relation: ", groupMembership);
+        log.info("Group: {}", response);
+        log.info("Relation: {}", groupMembership);
 
         log.info("Group created");
         return response;
     }
 
+    /**
+     * Method that handles fetching group by id.
+     * @param id group id.
+     * @return wanted group.
+     */
     @Override
     public GroupDto getGroupById(String id) {
         Group group = groupRepository.findById(id).orElseThrow(() -> new NoGroupFoundException("No group associated with that id"));
@@ -120,76 +116,14 @@ public class GroupServiceImpl implements GroupService {
         return converterService.convertToGroupDto(group);
     }
 
-    @Override
-    public GroupResponse joinGroup(GroupRequest request) {
-        Group group = groupRepository.findByName(request.getName())
-                .orElseThrow(() -> new NotFoundException("Group not found"));
-
-        GroupResponse response = new GroupResponse();
-        response.setGroupId(group.getId());
-        response.setName(request.getName());
-
-        UserGroupRelation existingMembership = groupMembershipRepository.findByUserIdAndGroupId(Helper.getLoggedInUserId(), group.getId());
-        if (existingMembership != null) {
-            throw new IllegalStateException("User is already a member of this group");
-        }
-        //? Saving the relation between a group and the profile
-        UserGroupRelation groupMembership = new UserGroupRelation();
-        groupMembership.setUserId(Helper.getLoggedInUserId());
-        groupMembership.setGroupId(group.getId());
-
-        groupMembershipRepository.save(groupMembership);
-
-        log.info("Group join successful");
-        return response;
-    }
-
-    @Override
-    public List<GroupProjectCountDto> countGroupProjects(String groupId) {
-        groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
-
-        MatchOperation matchByGroupId = Aggregation.match(Criteria.where("groupId").is(groupId));
-
-
-        ProjectionOperation projectionOperation = Aggregation.project()
-                .andInclude("value")
-                .andExclude("_id");
-
-        Aggregation aggregation = Aggregation.newAggregation(
-                matchByGroupId,
-                projectionOperation
-        );
-
-        AggregationResults<GroupProjectCountDto> results = mongoTemplate.aggregate(aggregation, "projects", GroupProjectCountDto.class);
-
-        log.info("Fetched the group project count successfully");
-        return results.getMappedResults();
-
-    }
-
-    @Override
-    public List<GroupTaskCountDto> countGroupTasks(String groupId) {
-        groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
-
-        MatchOperation matchByGroupId = Aggregation.match(Criteria.where("groupId").is(groupId));
-
-
-        ProjectionOperation projectionOperation = Aggregation.project()
-                .and("_id").as("name")
-                .andInclude("value")
-                .andExclude("_id");
-
-        Aggregation aggregation = Aggregation.newAggregation(
-                matchByGroupId,
-                projectionOperation
-        );
-
-        AggregationResults<GroupTaskCountDto> results = mongoTemplate.aggregate(aggregation, "tasks", GroupTaskCountDto.class);
-
-        log.info("Fetched the group tasks count successfully");
-        return results.getMappedResults();
-    }
-
+    /**
+     * Method that handles creation of the group.
+     * @param groupId id of the group.
+     * @param name Name off the group.
+     * @param description Description of the group.
+     * @param photoFile New profile image of the group.
+     * @return updated group.
+     */
     @Override
     public GroupEditResponse editGroupInfo(String groupId, String name, String description, MultipartFile photoFile) {
         Group group = groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
@@ -227,7 +161,12 @@ public class GroupServiceImpl implements GroupService {
         return response;
     }
 
-
+    /**
+     * Get all groups that some user belongs to.
+     * @param userId id of the wanted user.
+     * @param pageable Pagination.
+     * @return list of the groups.
+     */
     @Override
     public List<GroupDto> getAllUserGroups(String userId, Pageable pageable) {
         log.info("Fetching user memberships");
@@ -236,7 +175,7 @@ public class GroupServiceImpl implements GroupService {
 
         for(UserGroupRelationDto userGroupRelation : allUsersGroupMemberships) {
             Group group = groupRepository.findById(userGroupRelation.getGroupId())
-                    .orElseThrow(()-> new NoGroupFoundException("There is a relation between user and a group that doesnt exist"));
+                    .orElseThrow(()-> new NoGroupFoundException("There is a relation between user and a group that doesn't exist"));
             userGroups.add(group);
         }
 
@@ -245,18 +184,12 @@ public class GroupServiceImpl implements GroupService {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public UserGroupRelationDto getGroupRoles(String groupId) {
-        groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
-
-        UserGroupRelation membership = groupMembershipRepository.findByUserIdAndGroupId(Helper.getLoggedInUserId(), groupId);
-
-        return converterService.convertToUserGroupRelation(membership);
-    }
-
-
-
-    // important to get all user profiles that belong to some group...
+    /**
+     * Method that returns members of some group.
+     * @param groupId id of the wanted group.
+     * @param pageable Pagination.
+     * @return group members.
+     */
     @Override
     public List<GroupMemberResponse> getGroupMembers(String groupId, Pageable pageable) {
         groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
@@ -271,33 +204,16 @@ public class GroupServiceImpl implements GroupService {
                 groupUsers.add(converterService.convertUserToGroupMemberResponse(user, userGroupRelationResponse.getUserRole()));
             }
 
-
         }
 
         return groupUsers;
 
     }
 
-    @Override
-    public void kickUserFromGroup(String groupId, String userProfileId) {
-        groupRepository.findById(groupId).orElseThrow(() -> new NoGroupFoundException("No group associated with the groupId"));
-
-        UserGroupRelation membership = groupMembershipRepository.findByUserIdAndGroupId(userProfileId, groupId);
-        if (membership == null) {
-            throw new NotFoundException("User is not member of this group");
-        }
-
-
-        boolean isTargetUserAdmin = authService.hasRole(groupId, Role.ADMIN);
-
-        if(!isTargetUserAdmin) {
-            throw new IllegalStateException("Only the Admin can kick members");
-        }
-
-        groupMembershipRepository.delete(membership);
-        log.info("User Profile {} kicked from group {}", userProfileId, groupId);
-    }
-
+    /**
+     * Make user admin of some group.
+     * @param changeGroupAdminDto dto that contains some important data for this method to work properly.
+     */
     @Override
     public void promoteUser(ChangeGroupAdminDto changeGroupAdminDto) {
         groupRepository.findById(changeGroupAdminDto.getGroupId()).orElseThrow(

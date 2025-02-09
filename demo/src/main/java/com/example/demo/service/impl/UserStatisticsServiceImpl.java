@@ -1,12 +1,10 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.exceptions.NoUserFoundException;
-import com.example.demo.models.dao.Project;
 import com.example.demo.models.dao.Task;
 import com.example.demo.models.dto.ProjectResponse;
 import com.example.demo.models.dto.UserStatisticsDto;
 import com.example.demo.models.enums.TaskStatus;
-import com.example.demo.repository.ProjectRepository;
 import com.example.demo.repository.TaskRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.ProjectService;
@@ -24,7 +22,6 @@ import java.util.List;
 @AllArgsConstructor
 public class UserStatisticsServiceImpl implements UserStatisticsService {
     private final TaskRepository taskRepository;
-    private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final ProjectService projectService;
 

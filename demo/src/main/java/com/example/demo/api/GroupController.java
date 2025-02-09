@@ -166,7 +166,7 @@ public class GroupController {
             return ResponseEntity.ok(userGroupRelationService.createMultipleUserGroupRelations(users, groupId));
         } catch (NoGroupFoundException | NoUserFoundException e) {
             return ResponseEntity.notFound().build();
-        } catch (Error | UserGroupRelationAlreadyExistsException e) {
+        } catch (Error e) {
             return ResponseEntity.badRequest().build();
         }
     }
