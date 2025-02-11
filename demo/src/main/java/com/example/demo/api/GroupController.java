@@ -6,7 +6,6 @@ import com.example.demo.models.enums.Role;
 import com.example.demo.security.services.AuthService;
 import com.example.demo.service.GroupService;
 import com.example.demo.service.UserGroupRelationService;
-import com.example.demo.service.UserService;
 import com.example.demo.config.openapi.ShowAPI;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -46,7 +44,6 @@ public class GroupController {
         }
 
     }
-
 
     @GetMapping("/get-all-user-groups")
     public ResponseEntity<List<GroupDto>> getAllUserGroups(
@@ -204,8 +201,5 @@ public class GroupController {
             return ResponseEntity.badRequest().build();
         }
     }
-
-
-
 
 }

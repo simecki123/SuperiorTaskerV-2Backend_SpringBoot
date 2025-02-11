@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserProfileRequest {
+
     @NotBlank
     @Size(max = 50)
     private String userId;
@@ -17,6 +18,7 @@ public class UserProfileRequest {
     @NotBlank
     @Size(max = 50)
     private String email;
+
     @NotBlank
     @Size(max = 120)
     private String password;
@@ -35,7 +37,5 @@ public class UserProfileRequest {
 
     @NotBlank
     private String photoUrl;
-
-
 
 }

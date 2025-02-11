@@ -16,7 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -35,7 +34,6 @@ public class MessageController {
         try {
             log.info("Creating message for some user ");
             return ResponseEntity.ok(messageService.createMessage(message));
-
         } catch (NoGroupFoundException | NoUserFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (Error e) {
@@ -87,6 +85,5 @@ public class MessageController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
 
 }

@@ -11,7 +11,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -33,7 +32,6 @@ public class ProjectController {
         } catch (Error e) {
             return ResponseEntity.badRequest().build();
         }
-
     }
 
     @GetMapping("/getFilteredProjects")
@@ -104,7 +102,6 @@ public class ProjectController {
     @DeleteMapping("/delete-project")
     public ResponseEntity<DeleteResponse> deleteProject(@RequestParam String projectId) {
         try {
-
             log.info("Deleting project by his id...");
             return ResponseEntity.ok(projectService.deleteProjectById(projectId));
         }catch (NoProjectFoundException e ){

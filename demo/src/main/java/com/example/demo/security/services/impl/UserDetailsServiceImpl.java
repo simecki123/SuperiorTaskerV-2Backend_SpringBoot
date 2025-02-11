@@ -1,6 +1,5 @@
 package com.example.demo.security.services.impl;
 
-import com.example.demo.exceptions.UnauthorizedException;
 import com.example.demo.models.dao.User;
 import com.example.demo.repository.UserRepository;
 import lombok.AllArgsConstructor;

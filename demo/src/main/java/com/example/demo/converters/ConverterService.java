@@ -4,8 +4,6 @@ import com.example.demo.models.dao.*;
 import com.example.demo.models.dto.*;
 import com.example.demo.models.enums.Role;
 
-import java.util.List;
-
 public interface ConverterService {
     UserDto convertToUserDto(User user);
     GroupDto convertToGroupDto(Group group);

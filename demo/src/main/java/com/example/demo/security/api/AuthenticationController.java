@@ -11,7 +11,6 @@ import com.example.demo.security.api.dto.RegisterUserResponse;
 import com.example.demo.security.services.AuthService;
 import com.example.demo.security.utils.JwtUtils;
 import lombok.AllArgsConstructor;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -19,13 +18,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 
 @RestController
 @AllArgsConstructor
 @Slf4j
 @RequestMapping("api/auth")
 public class AuthenticationController {
+
     private final AuthService authService;
 
     private final JwtUtils jwtUtils;

@@ -1,6 +1,5 @@
 package com.example.demo.security.filters;
 
-
 import com.example.demo.security.services.impl.UserDetailsServiceImpl;
 import com.example.demo.security.utils.JwtUtils;
 import io.jsonwebtoken.Claims;
@@ -17,7 +16,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
 
 @Component
@@ -37,7 +35,6 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             if (jwt != null && jwtUtils.validateToken(jwt)) {
                 Claims claims = jwtUtils.getEmailFromJwtToken(jwt);
                 String email = (String) claims.get("sub");
-                // logger.info("Extracted email from JWT: {}", email);
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
                 log.info("Loaded user details: {}", userDetails);

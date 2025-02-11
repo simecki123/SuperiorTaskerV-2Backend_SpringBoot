@@ -30,7 +30,6 @@ public class UserController {
         try {
             log.info("Editing group info");
             return ResponseEntity.ok(userService.editUserProfile(firstName,lastName, description, file));
-
         }  catch (IllegalStateException e) {
             return ResponseEntity.notFound().build();
         } catch (Error e){

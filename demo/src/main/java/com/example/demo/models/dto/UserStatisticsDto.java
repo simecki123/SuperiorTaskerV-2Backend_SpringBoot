@@ -11,7 +11,6 @@ public class UserStatisticsDto {
     private int numberOfTasks;
     private int numberOfFinishedTasks;
     private int numberOfUnfinishedTasks;
-
     private int numberOfProjects;
     private int numberOfCompletedProjects;
     private int numberOfIncompleteProjects;

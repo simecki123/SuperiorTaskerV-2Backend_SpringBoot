@@ -13,7 +13,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -34,7 +33,6 @@ public class TaskController {
         } catch (Error e) {
             return ResponseEntity.badRequest().build();
         }
-
     }
 
     @GetMapping("/getFilteredTasks")
@@ -51,7 +49,6 @@ public class TaskController {
             Pageable pageable = PageRequest.of(page, size);
             List<TaskResponse> tasks = taskService.getAllTasksForUser(userId, groupId, projectId, status, search, pageable);
 
-            // Add debug logging
             log.info("Retrieved tasks count: {}", tasks.size());
             log.info("Query parameters - userId: {}, groupId: {}, projectId: {}, status: {}, search: {}, page: {}, size: {}",
                     userId, groupId, projectId, status, search, page, size);
@@ -68,7 +65,6 @@ public class TaskController {
         try {
             log.info("Updating task status...");
             return ResponseEntity.ok(taskService.updateTaskStatus(taskId, taskStatus));
-
         } catch (NoTaskFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
@@ -122,7 +118,5 @@ public class TaskController {
             return ResponseEntity.badRequest().build();
         }
     }
-
-
 
 }

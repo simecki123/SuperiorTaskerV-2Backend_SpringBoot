@@ -1,6 +1,5 @@
 package com.example.demo.models.dto;
 
-import com.example.demo.models.enums.TaskStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;

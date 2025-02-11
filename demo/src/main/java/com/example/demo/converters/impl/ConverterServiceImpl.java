@@ -9,7 +9,6 @@ import com.example.demo.models.dto.*;
 import com.example.demo.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.net.URL;
 import java.util.List;
 
@@ -72,7 +71,6 @@ public class ConverterServiceImpl implements ConverterService {
     @Override
     public UserProfileEditResponse convertToUserProfileResponse(UserProfileRequest userProfileRequest) {
         UserProfileEditResponse response = new UserProfileEditResponse();
-        // Assuming the photoUri is set somewhere else, possibly after saving the profile
         String url = convertPhotoUriToUrl(userProfileRequest.getPhotoUrl());
         response.setProfileUri(url);
         return response;

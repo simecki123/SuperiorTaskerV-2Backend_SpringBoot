@@ -25,8 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.authentication.AuthenticationManager;
-
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -65,7 +63,6 @@ public class AuthServiceImpl implements AuthService {
             log.error("User not found in security context");
             throw new IllegalStateException("User not found in security context");
         }
-
 
     }
 
@@ -124,7 +121,6 @@ public class AuthServiceImpl implements AuthService {
             if (groupMembership == null) {
                 throw new UnauthorizedException("No membership for this group associated with the user profile");
             }
-
 
             Role role = groupMembership.getRole();
 
