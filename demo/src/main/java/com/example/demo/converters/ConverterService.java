@@ -4,8 +4,10 @@ import com.example.demo.models.dao.*;
 import com.example.demo.models.dto.*;
 import com.example.demo.models.enums.Role;
 
+import java.util.List;
+
 public interface ConverterService {
-    UserDto convertToUserDto(User user);
+    UserDto convertToUserDto(User user, List<UserGroupRelation> userGroupRelationList);
     GroupDto convertToGroupDto(Group group);
     GroupMemberResponse convertToGroupMemberResponse(GroupMemberDto groupMemberDto);
     UserProfileEditResponse convertToUserProfileResponse(UserProfileRequest userProfileRequest);

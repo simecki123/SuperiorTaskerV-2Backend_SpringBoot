@@ -55,8 +55,8 @@ public class AuthServiceImpl implements AuthService {
             User user = userRepository.getUserById(userDetails.getId());
             System.out.println(user);
 
-            UserDto userDto = converterService.convertToUserDto(user);
-
+            UserDto userDto = converterService.convertToUserDto(user, userGroupRelationList);
+            
             log.info("User successfully \"{}\" fetched.", userDto);
             return userDto;
         } else {

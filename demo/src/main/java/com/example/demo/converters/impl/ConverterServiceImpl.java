@@ -21,7 +21,7 @@ public class ConverterServiceImpl implements ConverterService {
     private final UserGroupRelationRepository userGroupRelationRepository;
 
     @Override
-    public UserDto convertToUserDto(User user) {
+    public UserDto convertToUserDto(User user, List<UserGroupRelation> userGroupRelationList) {
         UserDto userDto = new UserDto();
         userDto.setId(user.getId());
         userDto.setEmail(user.getEmail());
@@ -29,7 +29,6 @@ public class ConverterServiceImpl implements ConverterService {
         userDto.setLastName(user.getLastName());
         userDto.setDescription(user.getDescription());
         userDto.setProfileUri(convertPhotoUriToUrl(user.getPhotoUri()));
-        List<UserGroupRelation> userGroupRelationList = userGroupRelationRepository.findAllByUserId(user.getId());
         userDto.setGroupMembershipData(userGroupRelationList);
 
         return userDto;
