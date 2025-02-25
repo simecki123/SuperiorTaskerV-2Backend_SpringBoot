@@ -22,7 +22,7 @@ public class OpenAPIConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("SyncSnack")
+                        .title("SuperiorTasker")
                         .description("OpenAPI doc")
                         .version("1.0.0"));
     }

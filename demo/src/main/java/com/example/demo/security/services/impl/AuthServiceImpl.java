@@ -56,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
             System.out.println(user);
 
             UserDto userDto = converterService.convertToUserDto(user, userGroupRelationList);
-            
+
             log.info("User successfully \"{}\" fetched.", userDto);
             return userDto;
         } else {

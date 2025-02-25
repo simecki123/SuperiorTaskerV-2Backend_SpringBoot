@@ -1,10 +1,8 @@
 package com.example.demo.security.utils;
 
-import com.example.demo.models.dto.SimpleIdEmailDto;
 import com.example.demo.security.services.impl.UserDetailsImpl;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
