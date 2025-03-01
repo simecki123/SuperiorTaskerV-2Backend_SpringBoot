@@ -30,7 +30,7 @@ public class GroupController {
     private final UserGroupRelationService userGroupRelationService;
 
     @PostMapping("/createGroup")
-    public ResponseEntity<GroupResponse> crateGroup(
+    public ResponseEntity<GroupResponse> createGroup(
             @RequestPart(value = "name") String name,
             @RequestPart(value = "description") String description,
             @RequestPart(value = "photoUri") MultipartFile photoFile) {
