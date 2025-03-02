@@ -89,12 +89,6 @@ public class TaskController {
         }
     }
 
-
-    @PatchMapping("/change-task-user")
-    public ResponseEntity<String> changeUserOfTheTask(@RequestParam String taskId, @RequestParam String newUserId){
-        return null;
-    }
-
     @DeleteMapping("/delete-task")
     public ResponseEntity<DeleteResponse> deleteTask(@RequestParam String taskId) {
         try {
